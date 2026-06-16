@@ -1,0 +1,113 @@
+# Juniper Junos hardening verification template
+
+This template describes the read-only checks that the VNGDC Security Agent uses
+for Juniper Junos switches. It is not a shell script. The agent connects to the
+switch over SSH, runs Junos operational commands, and evaluates the collected
+evidence against `controls.json`.
+
+## Evidence Collection Commands
+
+Run these commands manually when you need to reproduce the agent evidence:
+
+```text
+show configuration | display set | no-more
+show version | no-more
+show system uptime | no-more
+show system commit | no-more
+```
+
+The automated checker expects the SSH account to have permission to run the
+commands above. A read-only class is sufficient if it allows `show` commands.
+
+## Automated Output Contract
+
+The dashboard parser reads section headers and status lines in this format:
+
+```text
+=== MANAGEMENT SERVICES ===
+[PASS] JUN-MGMT-001 | MANAGEMENT SERVICES | Junos SSH service should be enabled. | expected: SSH enabled for management access
+[FAIL] JUN-MGMT-002 | MANAGEMENT SERVICES | Telnet must not be enabled because it sends credentials in clear text. | expected: Telnet disabled | evidence: forbidden pattern present
+[WARN] JUN-SNMP-003 | SNMP | SNMPv3 should be preferred over community-based SNMP. | expected: SNMPv3 configured when SNMP is required
+```
+
+Status meaning:
+
+- `PASS`: control evidence matches the expected baseline.
+- `FAIL`: required hardening is missing or forbidden configuration is present.
+- `WARN`: recommended control is missing, but it may be acceptable by policy.
+- `INFO`: inventory or evidence-only item.
+
+## Control Groups
+
+### MANAGEMENT SERVICES
+
+Checks that management protocols are secure:
+
+- SSH enabled.
+- Telnet disabled.
+- Plain HTTP management disabled.
+- HTTPS only when J-Web is required.
+- NETCONF over SSH only when automation requires it.
+
+### AUTHENTICATION
+
+Checks local and remote authentication posture:
+
+- Root authentication uses encrypted password or SSH key.
+- Local users do not use `plain-text-password`.
+- Authentication order is explicitly configured.
+- Login retry limits exist.
+- Admin classes have idle timeout.
+- Named admin accounts are used instead of root-only operations.
+
+### LOGGING AND AUDIT
+
+Checks event forwarding and audit visibility:
+
+- Remote syslog host is configured.
+- Interactive commands are logged.
+- Authorization/authentication events are logged.
+
+### TIME SYNCHRONIZATION
+
+Checks log-correlation readiness:
+
+- NTP server is configured.
+- Time zone is explicitly configured.
+
+### SNMP
+
+Checks monitoring access risk:
+
+- Default `public` and `private` communities are absent.
+- Community-based SNMP is restricted to approved collectors.
+- SNMPv3 is preferred where SNMP is required.
+
+### CONTROL PLANE PROTECTION
+
+Checks routing-engine exposure:
+
+- Firewall filter is applied to `lo0`.
+- Management sources are restricted in the control-plane filter.
+
+### CONFIGURATION MANAGEMENT
+
+Checks operational safety:
+
+- Configuration archival is enabled.
+- Login banner is configured.
+
+### OPERATIONS
+
+Checks agent inventory readiness:
+
+- `show version` returns Junos information.
+- `show system commit` returns commit history.
+
+## Notes
+
+- The baseline is intentionally conservative. Controls marked `WARN` should be
+  reviewed against local network policy before being treated as a failure.
+- Do not store secrets, SNMP community values, AAA shared secrets, or private
+  SSH keys in this repository.
+- Use `commit confirmed` when applying changes that affect management access.

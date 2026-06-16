@@ -1,0 +1,11 @@
+greennode-agentbase
+greennode-agent-bridge[langgraph]
+langgraph>=1.0.0,<2.0.0
+langchain-openai>=1.1.0,<2.0.0
+python-dotenv
+
+# SSH connectivity for hardening checks
+paramiko>=3.4.0
+
+# Scheduling (daily 9AM checks)
+APScheduler>=3.10.0,<4.0.0

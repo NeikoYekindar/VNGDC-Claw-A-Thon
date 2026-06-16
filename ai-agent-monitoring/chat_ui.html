@@ -1,0 +1,3013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Agent Monitoring</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Login overlay ── */
+    #login-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: #0f1117;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #login-overlay.hidden { display: none; }
+
+    .login-box {
+      background: #1a1d2e; border: 1px solid #2d3250;
+      border-radius: 16px; padding: 40px 36px;
+      width: 360px; display: flex; flex-direction: column; gap: 20px;
+    }
+    .login-logo { text-align: center; font-size: 48px; }
+    .login-title { text-align: center; font-size: 18px; font-weight: 600; color: #a5b4fc; }
+    .login-sub { text-align: center; font-size: 13px; color: #475569; margin-top: -12px; }
+
+    .login-field { display: flex; flex-direction: column; gap: 6px; }
+    .login-field label { font-size: 12px; color: #94a3b8; font-weight: 500; }
+    .login-field input {
+      background: #0f1117; border: 1px solid #2d3250; border-radius: 8px;
+      color: #e2e8f0; padding: 10px 14px; font-size: 14px; font-family: inherit;
+    }
+    .login-field input:focus { outline: none; border-color: #6366f1; }
+
+    #login-btn {
+      background: #6366f1; color: white; border: none; border-radius: 8px;
+      padding: 11px; font-size: 14px; cursor: pointer; font-weight: 500;
+      transition: background .15s;
+    }
+    #login-btn:hover { background: #4f46e5; }
+    #login-btn:disabled { background: #2d3250; cursor: not-allowed; }
+    #login-error { font-size: 13px; color: #f87171; text-align: center; display: none; }
+
+    /* ── Header ── */
+    header {
+      background: #1a1d2e;
+      border-bottom: 1px solid #2d3250;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    header .logo { font-size: 24px; }
+    header .title-group { flex: 1; }
+    header h1 { font-size: 17px; font-weight: 600; color: #a5b4fc; }
+    header .sub { font-size: 12px; color: #475569; margin-top: 2px; }
+
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .status-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: #0f2a1a; border: 1px solid #166534;
+      border-radius: 20px; padding: 4px 12px;
+      font-size: 12px; color: #4ade80;
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 5px #22c55e; }
+    .user-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: #1e1b4b; border: 1px solid #3730a3;
+      border-radius: 20px; padding: 4px 12px;
+      font-size: 12px; color: #a5b4fc; cursor: default;
+    }
+    .role-badge {
+      background: #312e81; border-radius: 4px;
+      padding: 1px 6px; font-size: 10px; color: #c7d2fe; text-transform: uppercase;
+    }
+    .role-badge.admin { background: #7c2d12; color: #fed7aa; }
+    #logout-btn {
+      background: none; border: 1px solid #374151; border-radius: 8px;
+      color: #9ca3af; padding: 5px 12px; font-size: 12px; cursor: pointer;
+    }
+    #logout-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+    /* ── Tabs ── */
+    #tabs {
+      background: #161827; border-bottom: 1px solid #2d3250;
+      display: flex; padding: 0 24px; gap: 4px; flex-shrink: 0;
+    }
+    .tab {
+      padding: 10px 18px; font-size: 13px; cursor: pointer;
+      border-bottom: 2px solid transparent; color: #64748b;
+      transition: all 0.15s; user-select: none;
+    }
+    .tab:hover { color: #a5b4fc; }
+    .tab.active { color: #a5b4fc; border-bottom-color: #6366f1; font-weight: 500; }
+    .tab.admin-only { display: none; }
+    .tab.admin-only.visible { display: block; }
+
+    /* ── Chat area ── */
+    #chat-area {
+      flex: 1; overflow-y: auto; padding: 24px;
+      display: flex; flex-direction: column; gap: 18px;
+    }
+
+    .msg { display: flex; gap: 10px; }
+    .msg.user { flex-direction: row-reverse; align-self: flex-end; max-width: 75%; }
+    .msg.agent { align-self: flex-start; max-width: 82%; }
+
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; flex-shrink: 0; margin-top: 2px;
+    }
+    .msg.user .avatar { background: #312e81; }
+    .msg.agent .avatar { background: #1e3a5f; }
+
+    .bubble {
+      background: #1a1d2e; border: 1px solid #2d3250; border-radius: 14px;
+      padding: 13px 17px; font-size: 14px; line-height: 1.65;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .msg.user .bubble { background: #312e81; border-color: #4338ca; border-bottom-right-radius: 4px; }
+    .msg.agent .bubble { border-bottom-left-radius: 4px; }
+
+    .bubble .meta {
+      font-size: 11px; color: #475569; margin-top: 10px;
+      padding-top: 8px; border-top: 1px solid #2d3250;
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .meta-tag { background: #0f1117; border: 1px solid #2d3250; border-radius: 4px; padding: 2px 7px; font-size: 11px; }
+    .cmd-block {
+      background: #0d1117; border: 1px solid #2d3250; border-radius: 6px;
+      padding: 8px 12px; margin-top: 8px;
+      font-family: "Courier New", monospace; font-size: 12px; color: #86efac;
+    }
+
+    .typing { display: flex; gap: 4px; align-items: center; padding: 2px 0; }
+    .typing span { width: 7px; height: 7px; background: #6366f1; border-radius: 50%; animation: bounce 1.2s infinite; }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-6px); } }
+
+    /* ── Alert form ── */
+    #alert-form { display: none; padding: 24px; overflow-y: auto; flex: 1; flex-direction: column; gap: 14px; }
+    #alert-form.active { display: flex; }
+    .form-row { display: flex; flex-direction: column; gap: 5px; }
+    .form-row label { font-size: 12px; color: #94a3b8; font-weight: 500; }
+    .form-row input, .form-row select, .form-row textarea {
+      background: #1a1d2e; border: 1px solid #2d3250; border-radius: 8px;
+      color: #e2e8f0; padding: 9px 13px; font-size: 14px; font-family: inherit;
+    }
+    .form-row textarea { resize: vertical; min-height: 80px; }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus { outline: none; border-color: #6366f1; }
+    #send-alert-btn { background: #dc2626; color: white; border: none; border-radius: 8px; padding: 10px 24px; font-size: 14px; cursor: pointer; align-self: flex-start; }
+    #send-alert-btn:hover { background: #b91c1c; }
+    #alert-response { background: #1a1d2e; border: 1px solid #2d3250; border-radius: 8px; padding: 14px; font-size: 13px; white-space: pre-wrap; display: none; color: #86efac; }
+    .alert-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    #simulate-btn { background: #7c3aed; color: white; border: none; border-radius: 8px; padding: 10px 18px; font-size: 14px; cursor: pointer; }
+    #simulate-btn:hover { background: #6d28d9; }
+    #simulate-btn:disabled { background: #2d3250; cursor: not-allowed; color: #64748b; }
+    #trigger-batch-btn { display: none; background: #16a34a; color: white; border: none; border-radius: 8px; padding: 10px 18px; font-size: 14px; cursor: pointer; }
+    #trigger-batch-btn:hover { background: #15803d; }
+    #trigger-batch-btn:disabled { background: #2d3250; cursor: not-allowed; color: #64748b; }
+    #sim-result-box { display: none; }
+    .sim-result { background: #171423; border: 1px solid #4c1d95; border-radius: 8px; padding: 14px; font-size: 13px; color: #c4b5fd; }
+    .sim-title { font-weight: 600; color: #ddd6fe; margin-bottom: 10px; }
+    .sim-alert-item { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-top: 1px solid #2d1b55; }
+    .sim-alert-item:first-of-type { border-top: none; }
+    .sim-badge { min-width: 66px; text-align: center; border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    .sim-badge.critical { background: #450a0a; border: 1px solid #991b1b; color: #fca5a5; }
+    .sim-badge.warning { background: #451a03; border: 1px solid #92400e; color: #fdba74; }
+    .sim-host { color: #a5b4fc; }
+    .sim-desc { color: #94a3b8; }
+
+    /* ── Input bar ── */
+    #input-bar { background: #0f1117; border-top: 1px solid #1e2235; padding: 16px 24px 20px; display: flex; flex-direction: column; gap: 0; flex-shrink: 0; }
+    #input-wrapper { display: flex; align-items: flex-end; background: #1a1d2e; border: 1.5px solid #2d3250; border-radius: 16px; padding: 12px 14px 12px 18px; gap: 10px; transition: border-color 0.15s; }
+    #input-wrapper:focus-within { border-color: #6366f1; }
+    #msg-input { flex: 1; background: transparent; border: none; color: #e2e8f0; padding: 0; font-size: 15px; font-family: inherit; resize: none; min-height: 28px; max-height: 200px; line-height: 1.65; outline: none; }
+    #msg-input::placeholder { color: #4a5568; }
+    #send-btn { background: #6366f1; color: white; border: none; border-radius: 10px; width: 38px; height: 38px; font-size: 18px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background 0.15s; align-self: flex-end; }
+    #send-btn:hover { background: #4f46e5; }
+    #send-btn:disabled { background: #2d3250; cursor: not-allowed; color: #4a5568; }
+    .input-hint { font-size: 11px; color: #2d3748; margin-top: 7px; text-align: center; }
+
+    /* ── Knowledge tab ── */
+    #knowledge-panel { display: none; padding: 24px; overflow-y: auto; flex: 1; flex-direction: column; gap: 20px; }
+    #knowledge-panel.active { display: flex; }
+
+    .kb-section-title { font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+    .drop-zone { border: 2px dashed #2d3250; border-radius: 12px; padding: 36px 24px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; color: #475569; }
+    .drop-zone.drag-over { border-color: #6366f1; background: #1a1d3a; color: #a5b4fc; }
+    .drop-zone .dz-icon { font-size: 36px; margin-bottom: 8px; }
+    .drop-zone .dz-text { font-size: 14px; }
+    .drop-zone .dz-sub { font-size: 12px; margin-top: 4px; color: #374151; }
+
+    #kb-preview { background: #1a1d2e; border: 1px solid #2d3250; border-radius: 8px; padding: 14px; font-size: 13px; white-space: pre-wrap; max-height: 200px; overflow-y: auto; display: none; color: #86efac; font-family: "Courier New", monospace; }
+    #kb-filename-row { display: flex; gap: 10px; align-items: center; display: none; }
+    #kb-filename { flex: 1; background: #1a1d2e; border: 1px solid #2d3250; border-radius: 8px; color: #e2e8f0; padding: 8px 12px; font-size: 14px; }
+    #kb-upload-btn { background: #6366f1; color: white; border: none; border-radius: 8px; padding: 9px 20px; font-size: 14px; cursor: pointer; white-space: nowrap; }
+    #kb-upload-btn:hover { background: #4f46e5; }
+    #kb-upload-btn:disabled { background: #2d3250; cursor: not-allowed; }
+    #kb-status { font-size: 13px; color: #4ade80; display: none; }
+
+    .kb-file-list { display: flex; flex-direction: column; gap: 8px; }
+    .kb-file-item { background: #1a1d2e; border: 1px solid #2d3250; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+    .kb-file-icon { font-size: 18px; }
+    .kb-file-name { flex: 1; font-size: 14px; color: #e2e8f0; }
+    .kb-file-size { font-size: 11px; color: #475569; }
+    .kb-file-del { background: none; border: 1px solid #374151; border-radius: 6px; color: #ef4444; padding: 3px 8px; font-size: 12px; cursor: pointer; }
+    .kb-file-del:hover { background: #1f1212; }
+    .kb-empty { color: #374151; font-size: 13px; text-align: center; padding: 16px; }
+    .kb-readonly-notice { background: #1e1b4b; border: 1px solid #3730a3; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #a5b4fc; }
+
+    /* ── Maintenance tab (admin only) ── */
+    #maintenance-panel { display: none; padding: 24px; overflow-y: auto; flex: 1; flex-direction: column; gap: 20px; }
+    #maintenance-panel.active { display: flex; }
+
+    .mw-form { background: #1a1d2e; border: 1px solid #2d3250; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .mw-form h3 { font-size: 14px; font-weight: 600; color: #fb923c; }
+    .mw-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .mw-row .form-row { flex: 1; min-width: 120px; }
+    .mw-row .form-row input { width: 100%; }
+    #mw-add-btn { background: #d97706; color: white; border: none; border-radius: 8px; padding: 9px 20px; font-size: 14px; cursor: pointer; white-space: nowrap; align-self: flex-end; }
+    #mw-add-btn:hover { background: #b45309; }
+    #mw-status { font-size: 13px; display: none; }
+
+    .mw-list { display: flex; flex-direction: column; gap: 8px; }
+    .mw-item { background: #1a1d2e; border: 1px solid #92400e; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+    .mw-item-host { flex: 1; font-size: 14px; font-family: monospace; color: #fb923c; }
+    .mw-item-until { font-size: 11px; color: #78716c; }
+    .mw-item-reason { font-size: 12px; color: #a8a29e; }
+    .mw-item-del { background: none; border: 1px solid #374151; border-radius: 6px; color: #ef4444; padding: 3px 8px; font-size: 12px; cursor: pointer; }
+    .mw-item-del:hover { background: #1f1212; }
+    .mw-empty { color: #374151; font-size: 13px; text-align: center; padding: 20px; }
+    .mw-info { background: #1c1917; border: 1px solid #44403c; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #a8a29e; line-height: 1.6; }
+
+    /* ── Inventory tab ── */
+    #inventory-panel { display: none; padding: 24px; overflow-y: auto; flex: 1; flex-direction: column; gap: 20px; }
+    #inventory-panel.active { display: flex; }
+
+    .inv-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .inv-filter-group { display: flex; gap: 6px; }
+    .inv-filter-btn { background: #1a1d2e; border: 1px solid #2d3250; border-radius: 20px; color: #94a3b8; padding: 5px 14px; font-size: 12px; cursor: pointer; transition: all .15s; }
+    .inv-filter-btn.active { background: #312e81; border-color: #6366f1; color: #a5b4fc; }
+    .inv-upload-btn { margin-left: auto; background: #6366f1; color: white; border: none; border-radius: 8px; padding: 7px 16px; font-size: 13px; cursor: pointer; }
+    .inv-upload-btn:hover { background: #4f46e5; }
+    #inv-status { font-size: 13px; display: none; }
+
+    .inv-table-wrap { overflow-x: auto; }
+    .inv-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .inv-table th { background: #1a1d2e; color: #64748b; font-weight: 500; text-align: left; padding: 10px 14px; border-bottom: 1px solid #2d3250; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+    .inv-table td { padding: 10px 14px; border-bottom: 1px solid #1e2235; vertical-align: middle; }
+    .inv-table tr:hover td { background: #1a1d2e; }
+    .inv-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+    .inv-badge-server { background: #0f2a1a; border: 1px solid #166534; color: #4ade80; }
+    .inv-badge-network { background: #1e1b4b; border: 1px solid #3730a3; color: #a5b4fc; }
+    .inv-badge-source { background: #1c1917; border: 1px solid #44403c; color: #d6d3d1; }
+    .inv-count { font-size: 12px; color: #475569; margin-left: auto; }
+    .inv-empty { color: #374151; font-size: 13px; text-align: center; padding: 32px; }
+
+    /* hidden file input for CSV upload */
+    #inv-csv-input { display: none; }
+
+    /* ── Users tab (admin only) ── */
+    #users-panel { display: none; padding: 24px; overflow-y: auto; flex: 1; flex-direction: column; gap: 20px; }
+    #users-panel.active { display: flex; }
+
+    .users-section { display: flex; flex-direction: column; gap: 12px; }
+    .create-user-form { background: #1a1d2e; border: 1px solid #2d3250; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .create-user-form h3 { font-size: 14px; font-weight: 600; color: #a5b4fc; }
+    .create-user-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .create-user-row .form-row { flex: 1; min-width: 120px; }
+    .create-user-row .form-row input, .create-user-row .form-row select { width: 100%; }
+    #create-user-btn { background: #16a34a; color: white; border: none; border-radius: 8px; padding: 9px 20px; font-size: 14px; cursor: pointer; white-space: nowrap; align-self: flex-end; }
+    #create-user-btn:hover { background: #15803d; }
+    #create-user-status { font-size: 13px; display: none; }
+
+    .user-list { display: flex; flex-direction: column; gap: 8px; }
+    .user-item { background: #1a1d2e; border: 1px solid #2d3250; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+    .user-item-name { flex: 1; font-size: 14px; }
+    .user-item-date { font-size: 11px; color: #475569; }
+    .user-item-del { background: none; border: 1px solid #374151; border-radius: 6px; color: #ef4444; padding: 3px 8px; font-size: 12px; cursor: pointer; }
+    .user-item-del:hover { background: #1f1212; }
+    .user-item-del:disabled { color: #374151; cursor: not-allowed; }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2d3250; border-radius: 3px; }
+
+    /* Dashboard skin inspired by the reference app */
+    :root {
+      --bg: #f8fafc;
+      --bg-band: #eff6ff;
+      --surface: #ffffff;
+      --surface-soft: #f1f5f9;
+      --text: #172033;
+      --muted: #667085;
+      --muted-strong: #475569;
+      --border: #d8dee8;
+      --border-soft: #e6ebf2;
+      --primary: #1d5fd2;
+      --primary-hover: #174ea9;
+      --primary-soft: #eff6ff;
+      --primary-border: #bfdbfe;
+      --accent: #278f83;
+      --success: #059669;
+      --success-soft: #ecfdf5;
+      --warning: #d97706;
+      --warning-soft: #fffbeb;
+      --danger: #dc2626;
+      --danger-soft: #fef2f2;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 10px 28px rgba(15, 23, 42, 0.08);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-feature-settings: "rlig" 1, "calt" 1;
+      background:
+        linear-gradient(180deg, var(--bg-band) 0%, rgba(239, 246, 255, 0) 230px),
+        var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      transition: background-color .15s, border-color .15s, color .15s, opacity .15s, box-shadow .15s;
+    }
+
+    #login-overlay {
+      background:
+        linear-gradient(180deg, var(--bg-band) 0%, rgba(239, 246, 255, 0) 220px),
+        var(--bg);
+    }
+
+    .login-box {
+      width: min(380px, calc(100vw - 32px));
+      padding: 34px 32px;
+      background: rgba(255, 255, 255, .96);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+    }
+
+    .login-logo {
+      display: flex;
+      width: 48px;
+      height: 48px;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+      border: 1px solid var(--primary-border);
+      border-radius: var(--radius);
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 24px;
+    }
+
+    .login-title {
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .login-sub {
+      color: var(--muted);
+    }
+
+    .login-field label,
+    .form-row label {
+      color: var(--muted-strong);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .login-field input,
+    .form-row input,
+    .form-row select,
+    .form-row textarea,
+    #kb-filename {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 10px 12px;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02);
+    }
+
+    .login-field input:focus,
+    .form-row input:focus,
+    .form-row select:focus,
+    .form-row textarea:focus,
+    #kb-filename:focus,
+    #input-wrapper:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 95, 210, .14);
+      outline: none;
+    }
+
+    #login-btn,
+    #send-btn,
+    #kb-upload-btn,
+    .inv-upload-btn {
+      background: var(--primary);
+      color: #fff;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      font-weight: 600;
+    }
+
+    #login-btn:hover,
+    #send-btn:hover,
+    #kb-upload-btn:hover,
+    .inv-upload-btn:hover {
+      background: var(--primary-hover);
+    }
+
+    #login-btn:disabled,
+    #send-btn:disabled,
+    #kb-upload-btn:disabled,
+    #simulate-btn:disabled,
+    #trigger-batch-btn:disabled {
+      background: #cbd5e1;
+      color: #64748b;
+      cursor: not-allowed;
+      opacity: .8;
+    }
+
+    #login-error {
+      color: #b91c1c;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      min-height: 64px;
+      padding: 14px 32px;
+      background: rgba(255, 255, 255, .95);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+    }
+
+    header .logo {
+      display: flex;
+      width: 36px;
+      height: 36px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--primary-border);
+      border-radius: var(--radius);
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 18px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    header h1 {
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    header .sub {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-pill,
+    .user-pill {
+      height: 28px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted-strong);
+      font-weight: 600;
+    }
+
+    .status-dot {
+      background: var(--success);
+      box-shadow: 0 0 0 3px rgba(5, 150, 105, .14);
+    }
+
+    .role-badge {
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      border-radius: 999px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .role-badge.admin {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      color: #c2410c;
+    }
+
+    #logout-btn,
+    .kb-file-del,
+    .mw-item-del,
+    .user-item-del {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: #b91c1c;
+    }
+
+    #logout-btn:hover,
+    .kb-file-del:hover,
+    .mw-item-del:hover,
+    .user-item-del:hover {
+      background: var(--danger-soft);
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+
+    .user-item-del:disabled {
+      color: #94a3b8;
+      background: var(--surface-soft);
+      cursor: not-allowed;
+    }
+
+    #tabs {
+      z-index: 10;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 10px 32px;
+      background: rgba(255, 255, 255, .9);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+
+    .tab {
+      display: inline-flex;
+      min-height: 36px;
+      align-items: center;
+      white-space: nowrap;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 12px;
+    }
+
+    .tab:hover {
+      background: var(--surface-soft);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .tab.active {
+      background: var(--primary-soft);
+      border-color: var(--primary-border);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    #chat-area {
+      min-height: 0;
+      margin: 24px 32px 0;
+      padding: 24px;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, .94);
+      border: 1px solid var(--border);
+      border-bottom: 0;
+      border-radius: var(--radius) var(--radius) 0 0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    #alert-form.active,
+    #knowledge-panel.active,
+    #maintenance-panel.active,
+    #inventory-panel.active,
+    #users-panel.active {
+      min-height: 0;
+      margin: 24px 32px;
+      padding: 24px;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, .94);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .msg {
+      gap: 12px;
+    }
+
+    .msg.user {
+      max-width: 78%;
+    }
+
+    .msg.agent {
+      max-width: 84%;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .msg.user .avatar {
+      background: var(--primary-soft);
+      border-color: var(--primary-border);
+      color: var(--primary);
+    }
+
+    .msg.agent .avatar {
+      background: var(--surface-soft);
+      color: var(--muted-strong);
+    }
+
+    .bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+      line-height: 1.65;
+    }
+
+    .msg.user .bubble {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      border-bottom-right-radius: 3px;
+    }
+
+    .msg.agent .bubble {
+      border-bottom-left-radius: 3px;
+    }
+
+    .bubble .meta {
+      color: var(--muted);
+      border-top: 1px solid var(--border-soft);
+    }
+
+    .meta-tag,
+    .cmd-block {
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      color: var(--muted-strong);
+    }
+
+    .cmd-block,
+    #kb-preview {
+      font-family: "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    .typing span {
+      background: var(--primary);
+    }
+
+    #input-bar {
+      margin: 0 32px 24px;
+      padding: 16px 18px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0 0 var(--radius) var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+
+    #input-wrapper {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 10px 10px 14px;
+    }
+
+    #msg-input {
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    #msg-input::placeholder {
+      color: #94a3b8;
+    }
+
+    #send-btn {
+      width: 40px;
+      height: 40px;
+    }
+
+    .input-hint {
+      color: var(--muted);
+    }
+
+    .form-row {
+      gap: 6px;
+    }
+
+    .form-row textarea {
+      min-height: 96px;
+    }
+
+    #send-alert-btn {
+      background: var(--danger);
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    #send-alert-btn:hover {
+      background: #b91c1c;
+    }
+
+    #simulate-btn {
+      background: var(--accent);
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    #simulate-btn:hover {
+      background: #1f756d;
+    }
+
+    #trigger-batch-btn,
+    #create-user-btn {
+      background: var(--success);
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    #trigger-batch-btn:hover,
+    #create-user-btn:hover {
+      background: #047857;
+    }
+
+    #alert-response,
+    #kb-preview {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: #047857;
+    }
+
+    .sim-result {
+      background: #f5f3ff;
+      border: 1px solid #ddd6fe;
+      border-radius: var(--radius);
+      color: #5b21b6;
+    }
+
+    .sim-title {
+      color: #4c1d95;
+    }
+
+    .sim-alert-item {
+      border-top: 1px solid #e9d5ff;
+    }
+
+    .sim-badge {
+      border-radius: 999px;
+    }
+
+    .sim-badge.critical {
+      background: var(--danger-soft);
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+    }
+
+    .sim-badge.warning {
+      background: var(--warning-soft);
+      border: 1px solid #fed7aa;
+      color: #b45309;
+    }
+
+    .sim-host {
+      color: var(--primary);
+    }
+
+    .sim-desc,
+    .kb-empty,
+    .mw-empty,
+    .inv-empty {
+      color: var(--muted);
+    }
+
+    .kb-section-title {
+      color: var(--muted-strong);
+      letter-spacing: .08em;
+    }
+
+    .drop-zone {
+      background: var(--bg);
+      border: 1px dashed #b9c4d2;
+      border-radius: var(--radius);
+      color: var(--muted);
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .drop-zone .dz-sub,
+    .kb-file-size,
+    .mw-item-until,
+    .user-item-date,
+    .inv-count {
+      color: var(--muted);
+    }
+
+    .kb-readonly-notice,
+    .mw-info {
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      border-radius: var(--radius);
+      color: var(--primary);
+    }
+
+    .kb-file-item,
+    .mw-item,
+    .user-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .kb-file-name,
+    .user-item-name {
+      color: var(--text);
+    }
+
+    .mw-form,
+    .create-user-form {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .mw-form h3,
+    .create-user-form h3,
+    .mw-item-host {
+      color: var(--warning);
+    }
+
+    .mw-item {
+      border-color: #fed7aa;
+      background: #fffaf2;
+    }
+
+    .mw-item-reason {
+      color: var(--muted-strong);
+    }
+
+    #mw-add-btn {
+      background: var(--warning);
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    #mw-add-btn:hover {
+      background: #b45309;
+    }
+
+    .inv-toolbar {
+      gap: 12px;
+    }
+
+    .inv-filter-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--muted-strong);
+      font-weight: 600;
+    }
+
+    .inv-filter-btn:hover {
+      background: var(--surface-soft);
+      color: var(--text);
+    }
+
+    .inv-filter-btn.active {
+      background: var(--primary-soft);
+      border-color: var(--primary-border);
+      color: var(--primary);
+    }
+
+    .inv-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .inv-table th {
+      background: var(--surface-soft);
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .inv-table td {
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--text);
+    }
+
+    .inv-table tr:hover td {
+      background: #f8fafc;
+    }
+
+    .inv-badge {
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .inv-badge-server {
+      background: var(--success-soft);
+      border: 1px solid #bbf7d0;
+      color: #047857;
+    }
+
+    .inv-badge-network {
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
+    }
+
+    .inv-badge-source {
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      color: var(--muted-strong);
+    }
+
+    .inv-format-note {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--muted-strong);
+      font-size: 12px;
+      line-height: 1.7;
+      padding: 14px 16px;
+    }
+
+    code {
+      color: var(--primary);
+      font-family: "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: .92em;
+    }
+
+    ::selection {
+      background: rgba(29, 95, 210, .18);
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 999px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    @media (max-width: 760px) {
+      body {
+        overflow: hidden;
+      }
+
+      header {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 12px 16px;
+      }
+
+      .header-right {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      #tabs {
+        padding: 8px 12px;
+      }
+
+      #chat-area {
+        margin: 12px 12px 0;
+        padding: 16px;
+      }
+
+      #alert-form.active,
+      #knowledge-panel.active,
+      #maintenance-panel.active,
+      #inventory-panel.active,
+      #users-panel.active {
+        margin: 12px;
+        padding: 16px;
+      }
+
+      #input-bar {
+        margin: 0 12px 12px;
+        padding: 12px;
+      }
+
+      .msg.user,
+      .msg.agent {
+        max-width: 96%;
+      }
+
+      .mw-row,
+      .create-user-row {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      #mw-add-btn,
+      #create-user-btn {
+        align-self: stretch;
+      }
+    }
+
+    /* Highlight pass: keep the dashboard feel, give the chat surface a signature */
+    body {
+      background:
+        linear-gradient(180deg, #eaf4ff 0%, rgba(234, 244, 255, 0) 245px),
+        linear-gradient(90deg, rgba(29, 95, 210, .035) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(39, 143, 131, .035) 1px, transparent 1px),
+        var(--bg);
+      background-size: auto, 44px 44px, 44px 44px, auto;
+    }
+
+    header {
+      position: sticky;
+      overflow: hidden;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, .03), 0 14px 34px rgba(29, 95, 210, .05);
+    }
+
+    header::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent), var(--warning));
+    }
+
+    header .logo {
+      width: 40px;
+      height: 40px;
+      background:
+        linear-gradient(135deg, rgba(29, 95, 210, .14), rgba(39, 143, 131, .14)),
+        var(--surface);
+      border-color: rgba(29, 95, 210, .25);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .85), 0 8px 18px rgba(29, 95, 210, .12);
+    }
+
+    header h1 {
+      font-size: 16px;
+      letter-spacing: .01em;
+    }
+
+    .status-pill {
+      background: linear-gradient(180deg, #ffffff, #f7fbff);
+      border-color: #d6e4f4;
+      box-shadow: var(--shadow-sm);
+    }
+
+    #tabs {
+      box-shadow: 0 1px 0 rgba(15, 23, 42, .03);
+    }
+
+    .tab {
+      position: relative;
+      min-height: 38px;
+    }
+
+    .tab.active {
+      background: #ffffff;
+      border-color: #c9dcf5;
+      color: #174ea9;
+      box-shadow: 0 6px 16px rgba(29, 95, 210, .10);
+    }
+
+    .tab.active::after {
+      content: "";
+      position: absolute;
+      right: 12px;
+      bottom: -1px;
+      left: 12px;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+
+    #chat-area {
+      position: relative;
+      isolation: isolate;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(255, 255, 255, .92)),
+        linear-gradient(90deg, rgba(29, 95, 210, .05) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(39, 143, 131, .05) 1px, transparent 1px);
+      background-size: auto, 36px 36px, 36px 36px;
+      border-color: #cfd9e7;
+      box-shadow: 0 18px 42px rgba(15, 23, 42, .08);
+    }
+
+    #chat-area::before {
+      content: "";
+      position: sticky;
+      top: -24px;
+      z-index: 2;
+      display: block;
+      height: 4px;
+      margin: -24px -24px 20px;
+      border-radius: var(--radius) var(--radius) 0 0;
+      background: linear-gradient(90deg, var(--primary), var(--accent), #f59e0b);
+    }
+
+    .avatar {
+      border-radius: 10px;
+    }
+
+    .msg.agent .avatar {
+      background:
+        linear-gradient(135deg, #ecfeff, #eff6ff);
+      border-color: #bae6fd;
+      color: #0f766e;
+    }
+
+    .msg.user .avatar {
+      background:
+        linear-gradient(135deg, var(--primary), #1556bf);
+      border-color: rgba(255, 255, 255, .35);
+      color: #fff;
+    }
+
+    .bubble {
+      padding: 16px 18px;
+      border-color: #d7e0eb;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, .07);
+    }
+
+    .msg.agent .bubble {
+      border-left: 4px solid var(--accent);
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+    }
+
+    .msg.user .bubble {
+      background: linear-gradient(135deg, #1d5fd2, #174ea9);
+      box-shadow: 0 12px 24px rgba(29, 95, 210, .20);
+    }
+
+    .bubble b {
+      color: inherit;
+      font-weight: 750;
+    }
+
+    .msg.agent .bubble b {
+      color: #111827;
+    }
+
+    .msg.agent .bubble i {
+      color: #334155;
+    }
+
+    #input-bar {
+      border-color: #cfd9e7;
+      box-shadow: 0 -1px 0 rgba(255, 255, 255, .9), 0 18px 42px rgba(15, 23, 42, .08);
+    }
+
+    #input-wrapper {
+      background:
+        linear-gradient(180deg, #ffffff, #f8fbff);
+      border-color: #cfd9e7;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
+    }
+
+    #send-btn {
+      background: linear-gradient(135deg, var(--primary), #1556bf);
+      box-shadow: 0 8px 18px rgba(29, 95, 210, .28);
+    }
+
+    #send-btn:hover {
+      background: linear-gradient(135deg, #174ea9, #0f3f91);
+      transform: translateY(-1px);
+    }
+
+    #send-btn:disabled {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .input-hint {
+      font-weight: 500;
+    }
+
+    #sim-result-box {
+      animation: panelIn .24s ease-out;
+    }
+
+    .sim-result {
+      position: relative;
+      overflow: hidden;
+      padding: 0;
+      background:
+        linear-gradient(135deg, rgba(29, 95, 210, .08), transparent 36%),
+        linear-gradient(225deg, rgba(39, 143, 131, .10), transparent 38%),
+        linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      border: 1px solid #cfe0f5;
+      color: var(--text);
+      box-shadow: 0 18px 38px rgba(15, 23, 42, .09);
+    }
+
+    .sim-result::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--accent), #f59e0b);
+    }
+
+    .sim-card-header {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid #e4edf8;
+    }
+
+    .sim-icon {
+      display: flex;
+      width: 42px;
+      height: 42px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #eff6ff, #ecfeff);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 8px 18px rgba(29, 95, 210, .12);
+      font-size: 20px;
+    }
+
+    .sim-kicker {
+      margin-bottom: 3px;
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
+    .sim-title {
+      margin: 0;
+      color: #102033;
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .sim-title span {
+      color: var(--primary);
+    }
+
+    .sim-subtitle {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .sim-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px 18px;
+      border-bottom: 1px solid #e4edf8;
+      background: rgba(248, 250, 252, .72);
+    }
+
+    .sim-metric {
+      min-width: 0;
+      border: 1px solid #dbe6f3;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .82);
+      padding: 10px 12px;
+    }
+
+    .sim-metric-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .sim-metric-value {
+      overflow: hidden;
+      margin-top: 3px;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sim-metric-value code {
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .sim-alert-list {
+      padding: 8px 8px 10px;
+    }
+
+    .sim-alert-item {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 12px;
+      align-items: flex-start;
+      border: 1px solid transparent;
+      border-top: 0;
+      border-radius: 10px;
+      padding: 11px 10px;
+      transition: background-color .15s, border-color .15s, transform .15s;
+    }
+
+    .sim-alert-item:hover {
+      background: #ffffff;
+      border-color: #e0e8f2;
+      transform: translateY(-1px);
+    }
+
+    .sim-alert-item + .sim-alert-item {
+      margin-top: 4px;
+    }
+
+    .sim-badge {
+      display: inline-flex;
+      min-width: 78px;
+      height: 24px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+
+    .sim-alert-name {
+      color: #111827;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .sim-host {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .sim-service {
+      display: inline-flex;
+      margin-left: 6px;
+      border: 1px solid #dbe6f3;
+      border-radius: 999px;
+      background: #f8fafc;
+      color: var(--muted-strong);
+      padding: 1px 7px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .sim-desc {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted-strong);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .sim-error {
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      background: #fff7f7;
+      color: #b91c1c;
+      padding: 12px 14px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .sim-trigger-result {
+      margin-top: 10px;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #f0fdf4, #ffffff);
+      color: #047857;
+      padding: 12px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sim-trigger-result.error {
+      border-color: #fecaca;
+      background: linear-gradient(180deg, #fef2f2, #ffffff);
+      color: #b91c1c;
+    }
+
+    @keyframes panelIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        background-size: auto, 34px 34px, 34px 34px, auto;
+      }
+
+      header .logo {
+        width: 36px;
+        height: 36px;
+      }
+
+      #chat-area::before {
+        top: -16px;
+        margin: -16px -16px 16px;
+      }
+
+      .bubble {
+        padding: 14px 15px;
+      }
+
+      .sim-card-header,
+      .sim-meta-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sim-alert-item {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Full app polish pass */
+    :root {
+      --panel-shadow: 0 20px 48px rgba(15, 23, 42, .08);
+      --panel-border: #cfdae8;
+      --panel-top: linear-gradient(90deg, var(--primary), var(--accent), #f59e0b);
+      --control-bg: linear-gradient(180deg, #ffffff, #f9fbff);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0 0 auto;
+      height: 170px;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(29, 95, 210, .10), transparent),
+        linear-gradient(90deg, rgba(39, 143, 131, .06), rgba(245, 158, 11, .05));
+      opacity: .78;
+    }
+
+    header,
+    #tabs,
+    #chat-area,
+    #input-bar,
+    #alert-form.active,
+    #knowledge-panel.active,
+    #maintenance-panel.active,
+    #inventory-panel.active,
+    #users-panel.active {
+      position: relative;
+    }
+
+    header {
+      padding-right: 32px;
+      padding-left: 32px;
+    }
+
+    header .title-group {
+      min-width: 0;
+    }
+
+    header h1 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    header h1::after {
+      content: "Live RCA";
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #dbeafe;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: var(--primary);
+      padding: 2px 7px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    #tabs {
+      gap: 10px;
+      padding-top: 12px;
+      padding-bottom: 12px;
+    }
+
+    .tab {
+      isolation: isolate;
+      overflow: hidden;
+      border-color: rgba(207, 218, 232, .55);
+      background: rgba(255, 255, 255, .72);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75);
+    }
+
+    .tab::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(135deg, rgba(29, 95, 210, .08), rgba(39, 143, 131, .08));
+      opacity: 0;
+      transition: opacity .16s ease;
+    }
+
+    .tab:hover::before,
+    .tab.active::before {
+      opacity: 1;
+    }
+
+    #chat-area,
+    #alert-form.active,
+    #knowledge-panel.active,
+    #maintenance-panel.active,
+    #inventory-panel.active,
+    #users-panel.active {
+      border-color: var(--panel-border);
+      box-shadow: var(--panel-shadow);
+    }
+
+    #alert-form.active,
+    #knowledge-panel.active,
+    #maintenance-panel.active,
+    #inventory-panel.active,
+    #users-panel.active {
+      overflow: auto;
+    }
+
+    #alert-form.active::before,
+    #knowledge-panel.active::before,
+    #maintenance-panel.active::before,
+    #inventory-panel.active::before,
+    #users-panel.active::before {
+      content: "";
+      position: sticky;
+      top: -24px;
+      z-index: 2;
+      display: block;
+      grid-column: 1 / -1;
+      height: 4px;
+      margin: -24px -24px 20px;
+      border-radius: var(--radius) var(--radius) 0 0;
+      background: var(--panel-top);
+    }
+
+    #alert-form.active {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-content: start;
+      gap: 16px;
+    }
+
+    #alert-form .form-row {
+      min-width: 0;
+    }
+
+    #alert-form .form-row:nth-child(5),
+    #alert-form .form-row:nth-child(6),
+    #alert-form .alert-actions,
+    #alert-form #alert-response,
+    #alert-form #sim-result-box {
+      grid-column: 1 / -1;
+    }
+
+    .form-row input,
+    .form-row select,
+    .form-row textarea,
+    #kb-filename,
+    #msg-input {
+      transition: border-color .15s, box-shadow .15s, background-color .15s;
+    }
+
+    .form-row input,
+    .form-row select,
+    .form-row textarea,
+    #kb-filename {
+      min-height: 42px;
+      background: var(--control-bg);
+    }
+
+    .form-row textarea {
+      min-height: 112px;
+    }
+
+    .alert-actions {
+      display: flex;
+      gap: 12px;
+      padding-top: 4px;
+    }
+
+    #send-alert-btn,
+    #simulate-btn,
+    #trigger-batch-btn,
+    #kb-upload-btn,
+    #mw-add-btn,
+    #create-user-btn,
+    .inv-upload-btn {
+      min-height: 40px;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, .12);
+    }
+
+    #send-alert-btn:hover,
+    #simulate-btn:hover,
+    #trigger-batch-btn:hover,
+    #kb-upload-btn:hover,
+    #mw-add-btn:hover,
+    #create-user-btn:hover,
+    .inv-upload-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    #knowledge-panel.active,
+    #maintenance-panel.active,
+    #users-panel.active {
+      gap: 18px;
+    }
+
+    #kb-upload-section,
+    #knowledge-panel > div:not(#kb-upload-section):not(#kb-readonly-notice),
+    .users-section,
+    .mw-form,
+    .create-user-form,
+    .mw-info,
+    .kb-readonly-notice {
+      border: 1px solid #dbe6f3;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, .96), rgba(248, 251, 255, .88));
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    #kb-upload-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .kb-section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 2px;
+      color: #172033;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+    }
+
+    .drop-zone {
+      min-height: 148px;
+      display: grid;
+      place-items: center;
+      border-style: dashed;
+      background:
+        linear-gradient(180deg, #ffffff, #f8fbff),
+        linear-gradient(90deg, rgba(29, 95, 210, .045) 1px, transparent 1px);
+      background-size: auto, 28px 28px;
+    }
+
+    .drop-zone .dz-icon {
+      display: inline-flex;
+      width: 48px;
+      height: 48px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #dbeafe;
+      border-radius: 14px;
+      background: #eff6ff;
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+      font-size: 24px;
+    }
+
+    #kb-filename-row {
+      gap: 12px;
+    }
+
+    .kb-file-item,
+    .mw-item,
+    .user-item {
+      min-height: 52px;
+      transition: border-color .15s, box-shadow .15s, transform .15s;
+    }
+
+    .kb-file-item:hover,
+    .mw-item:hover,
+    .user-item:hover {
+      border-color: #c7d8ed;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, .07);
+      transform: translateY(-1px);
+    }
+
+    .mw-row,
+    .create-user-row {
+      gap: 14px;
+    }
+
+    .mw-list,
+    .user-list,
+    .kb-file-list {
+      gap: 10px;
+    }
+
+    .inv-toolbar {
+      border: 1px solid #dbe6f3;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
+      padding: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .inv-filter-group {
+      border: 1px solid #dbe6f3;
+      border-radius: 10px;
+      background: #f8fafc;
+      padding: 4px;
+    }
+
+    .inv-filter-btn {
+      min-height: 32px;
+      border-color: transparent;
+    }
+
+    .inv-filter-btn.active {
+      background: #ffffff;
+      box-shadow: 0 4px 12px rgba(29, 95, 210, .10);
+    }
+
+    .inv-table-wrap {
+      box-shadow: 0 12px 28px rgba(15, 23, 42, .07);
+    }
+
+    .inv-table th {
+      height: 42px;
+      background: linear-gradient(180deg, #f8fafc, #eef4fb);
+    }
+
+    .inv-table td {
+      height: 46px;
+    }
+
+    .inv-format-note {
+      border-color: #dbe6f3;
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .kb-empty,
+    .mw-empty,
+    .inv-empty {
+      border: 1px dashed #dbe6f3;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .msg {
+      animation: messageIn .18s ease-out;
+    }
+
+    .bubble {
+      max-width: min(760px, 100%);
+    }
+
+    .msg.user .bubble {
+      border-color: rgba(255, 255, 255, .18);
+    }
+
+    .msg.agent .bubble {
+      position: relative;
+    }
+
+    .msg.agent .bubble::after {
+      content: "";
+      position: absolute;
+      inset: 12px auto 12px -4px;
+      width: 4px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--accent), var(--primary));
+    }
+
+    #input-wrapper {
+      min-height: 62px;
+    }
+
+    #msg-input {
+      padding-top: 7px;
+    }
+
+    @keyframes messageIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 900px) {
+      #alert-form.active {
+        grid-template-columns: 1fr;
+      }
+
+      #alert-form .form-row:nth-child(5),
+      #alert-form .form-row:nth-child(6),
+      #alert-form .alert-actions,
+      #alert-form #alert-response,
+      #alert-form #sim-result-box {
+        grid-column: auto;
+      }
+    }
+
+    @media (max-width: 760px) {
+      header h1::after {
+        display: none;
+      }
+
+      .alert-actions,
+      #kb-filename-row,
+      .inv-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      #send-alert-btn,
+      #simulate-btn,
+      #trigger-batch-btn,
+      #kb-upload-btn,
+      .inv-upload-btn {
+        width: 100%;
+      }
+
+      #kb-upload-section,
+      #knowledge-panel > div:not(#kb-upload-section):not(#kb-readonly-notice),
+      .users-section,
+      .mw-form,
+      .create-user-form,
+      .mw-info,
+      .kb-readonly-notice {
+        padding: 14px;
+      }
+    }
+
+    /* Sidebar workspace layout */
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    body::before {
+      display: none;
+    }
+
+    header {
+      z-index: 20;
+      min-height: 64px;
+      padding: 10px 20px 10px 18px;
+      background: #ffffff;
+      border-bottom: 1px solid #dbe3ef;
+      box-shadow: none;
+    }
+
+    header .logo {
+      display: inline-flex;
+      width: 32px;
+      height: 32px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #cfe7d5;
+      border-radius: 8px;
+      background: #f0fdf4;
+      font-size: 18px;
+    }
+
+    header h1 {
+      color: #101827;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    header h1::after,
+    header .sub,
+    .status-pill {
+      display: none;
+    }
+
+    #app-shell {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      background: #f8fafc;
+    }
+
+    #tabs {
+      width: 232px;
+      min-width: 232px;
+      height: auto;
+      min-height: 0;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 18px 10px;
+      background: #f5f7fa;
+      border-right: 1px solid #dbe3ef;
+      border-bottom: 0;
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+
+    #tabs::before {
+      content: "Workspace";
+      margin: 0 8px 8px;
+      color: #8a94a6;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .tab,
+    .tab.admin-only.visible {
+      display: flex;
+    }
+
+    .tab {
+      width: 100%;
+      min-height: 42px;
+      justify-content: flex-start;
+      gap: 10px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      color: #243244;
+      box-shadow: none;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: normal;
+    }
+
+    .tab:hover {
+      background: #eef4fb;
+      border-color: transparent;
+      color: #101827;
+    }
+
+    .tab.active {
+      background: #e5f4e9;
+      border-color: transparent;
+      color: #087233;
+      box-shadow: none;
+    }
+
+    .tab.active::after,
+    .tab::before {
+      display: none;
+    }
+
+    #workspace {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    #chat-area,
+    #alert-form.active,
+    #knowledge-panel.active,
+    #maintenance-panel.active,
+    #inventory-panel.active,
+    #users-panel.active {
+      flex: 1;
+      min-height: 0;
+      max-width: 1120px;
+      width: min(100%, 1120px);
+      margin: 24px auto;
+      border: 1px solid #d8e0eb;
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: none;
+    }
+
+    #chat-area {
+      margin-bottom: 0;
+      border-bottom: 0;
+      border-radius: 8px 8px 0 0;
+    }
+
+    #chat-area::before,
+    #alert-form.active::before,
+    #knowledge-panel.active::before,
+    #maintenance-panel.active::before,
+    #inventory-panel.active::before,
+    #users-panel.active::before {
+      display: none;
+    }
+
+    #input-bar {
+      width: min(100%, 1120px);
+      margin: 0 auto 24px;
+      border: 1px solid #d8e0eb;
+      border-radius: 0 0 8px 8px;
+      background: #ffffff;
+      box-shadow: none;
+    }
+
+    .bubble {
+      border-radius: 8px;
+      box-shadow: none;
+    }
+
+    .msg.agent .bubble {
+      border-left: 3px solid #278f83;
+    }
+
+    @media (max-width: 900px) {
+      header {
+        min-height: 58px;
+      }
+
+      #app-shell {
+        flex-direction: column;
+      }
+
+      #tabs {
+        width: 100%;
+        min-width: 0;
+        max-height: none;
+        flex-direction: row;
+        gap: 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 10px 14px;
+        border-right: 0;
+        border-bottom: 1px solid #dbe3ef;
+      }
+
+      #tabs::before {
+        display: none;
+      }
+
+      .tab {
+        width: auto;
+        min-width: max-content;
+        min-height: 38px;
+        padding: 8px 12px;
+        white-space: nowrap;
+      }
+
+      #chat-area,
+      #alert-form.active,
+      #knowledge-panel.active,
+      #maintenance-panel.active,
+      #inventory-panel.active,
+      #users-panel.active,
+      #input-bar {
+        width: auto;
+        margin-right: 14px;
+        margin-left: 14px;
+      }
+
+      #chat-area,
+      #alert-form.active,
+      #knowledge-panel.active,
+      #maintenance-panel.active,
+      #inventory-panel.active,
+      #users-panel.active {
+        margin-top: 14px;
+      }
+
+      #input-bar {
+        margin-bottom: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Login overlay (TẮT cho demo public — bật lại khi AUTH_ENABLED=True trong main.py) ── -->
+<!--
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">🖥️</div>
+    <div class="login-title">AI Agent Monitoring</div>
+    <div class="login-sub">GreenNode AgentBase · Đăng nhập để tiếp tục</div>
+
+    <div class="login-field">
+      <label>Username</label>
+      <input id="login-user" type="text" placeholder="admin" autocomplete="username" />
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <div id="login-error"></div>
+    <button id="login-btn">Đăng nhập</button>
+  </div>
+</div>
+-->
+<!-- Placeholders để JS không bị lỗi khi AUTH_ENABLED=False -->
+<div id="login-overlay" class="hidden"></div>
+<div id="login-error" style="display:none"></div>
+<input id="login-user" type="hidden" />
+<input id="login-pass" type="hidden" />
+<button id="login-btn" style="display:none"></button>
+
+<!-- ── Header ── -->
+<header>
+  <span class="logo">🖥️</span>
+  <div class="title-group">
+    <h1>AI Agent Monitoring</h1>
+    <div class="sub">GreenNode AgentBase · Điều tra sự cố với LangGraph + MiniMax</div>
+  </div>
+  <div class="header-right">
+    <div class="status-pill"><div class="status-dot"></div> Online</div>
+    <!-- User pill + logout (TẮT cho demo — bật lại khi AUTH_ENABLED=True)
+    <div class="user-pill">
+      <span id="header-username">—</span>
+      <span id="header-role-badge" class="role-badge">user</span>
+    </div>
+    <button id="logout-btn">Đăng xuất</button>
+    -->
+    <!-- Placeholder để JS không lỗi -->
+    <span id="header-username" style="display:none"></span>
+    <span id="header-role-badge" style="display:none"></span>
+    <button id="logout-btn" style="display:none"></button>
+  </div>
+</header>
+
+<!-- ── Tabs ── -->
+<main id="app-shell">
+<nav id="tabs" aria-label="Workspace navigation">
+  <div class="tab active" data-tab="chat">💬 Chat điều tra</div>
+  <div class="tab" data-tab="alert">🚨 Gửi cảnh báo</div>
+  <div class="tab" data-tab="knowledge">📚 Knowledge Base</div>
+  <!-- Tab admin-only (TẮT cho demo — bật lại khi AUTH_ENABLED=True)
+  <div class="tab admin-only" data-tab="maintenance">🔕 Maintenance</div>
+  <div class="tab admin-only" data-tab="users">👥 Users</div>
+  -->
+  <div class="tab" data-tab="maintenance">🔕 Bảo trì</div>
+  <div class="tab" data-tab="inventory">📋 Inventory</div>
+  <!-- Tab Users (tắt khi AUTH_ENABLED=False — bật lại khi re-enable login)
+  <div class="tab" data-tab="users">👥 Users</div>
+  -->
+</nav>
+
+<section id="workspace">
+
+<!-- Chat tab -->
+<div id="chat-area">
+  <div class="msg agent">
+    <div class="avatar">🤖</div>
+    <div class="bubble">
+Xin chào! Tôi là <b>AI Agent Monitoring</b> — tôi có thể SSH vào server, query metrics và phân tích sự kiện.
+
+🔍 <b>Điều tra server cụ thể:</b>
+• <i>Kiểm tra CPU của server 10.0.0.1</i>
+• <i>RAM còn bao nhiêu trên 192.168.1.10</i>
+
+📊 <b>Query toàn bộ hệ thống:</b>
+• <i>CPU của tất cả server hiện tại bao nhiêu?</i>
+• <i>Server nào đang dùng nhiều RAM nhất?</i>
+
+🚨 <b>Kiểm tra cảnh báo:</b>
+• <i>Hiện tại có alert gì không?</i>
+• <i>Các sự kiện có liên quan đến nhau không?</i>
+    </div>
+  </div>
+</div>
+
+<!-- Alert tab -->
+<div id="alert-form">
+  <div class="form-row"><label>Tên cảnh báo *</label><input id="a-name" type="text" placeholder="e.g. HighCPU, DiskFull" value="HighCPU" /></div>
+  <div class="form-row"><label>Instance (IP / hostname) *</label><input id="a-instance" type="text" placeholder="e.g. 10.0.0.5" /></div>
+  <div class="form-row">
+    <label>Mức độ</label>
+    <select id="a-severity">
+      <option value="critical">critical - Nghiêm trọng</option>
+      <option value="warning" selected>warning - Cảnh báo</option>
+      <option value="info">info - Thông tin</option>
+    </select>
+  </div>
+  <div class="form-row"><label>Service</label><input id="a-service" type="text" placeholder="e.g. payment-api" /></div>
+  <div class="form-row"><label>Mô tả</label><textarea id="a-desc" placeholder="Mô tả ngắn về cảnh báo"></textarea></div>
+  <div class="form-row"><label>Labels (JSON)</label><input id="a-labels" type="text" value='{"env":"production"}' /></div>
+  <div class="alert-actions">
+    <button id="send-alert-btn">🚨 Gửi cảnh báo cho Agent</button>
+    <button id="simulate-btn">🎲 Tạo kịch bản RCA</button>
+    <button id="trigger-batch-btn">▶ Chạy RCA ngay</button>
+  </div>
+  <pre id="alert-response"></pre>
+  <div id="sim-result-box"></div>
+</div>
+
+<!-- Knowledge Base tab -->
+<div id="knowledge-panel">
+  <!-- Upload section: admin only -->
+  <div id="kb-upload-section">
+    <div class="kb-section-title">📤 Import Knowledge File</div>
+    <div class="drop-zone" id="drop-zone">
+      <div class="dz-icon">📄</div>
+      <div class="dz-text">Kéo thả file <b>.md</b> vào đây</div>
+      <div class="dz-sub">hoặc click để chọn file</div>
+      <input type="file" id="kb-file-input" accept=".md" style="display:none">
+    </div>
+    <div id="kb-filename-row">
+      <input id="kb-filename" type="text" placeholder="Tên file (vd: nginx.md)" />
+      <button id="kb-upload-btn">⬆️ Tải lên</button>
+    </div>
+    <pre id="kb-preview"></pre>
+    <div id="kb-status"></div>
+  </div>
+
+  <!-- Read-only notice: non-admin -->
+  <div id="kb-readonly-notice" class="kb-readonly-notice" style="display:none">
+    📖 Bạn có thể xem danh sách Knowledge Files. Chỉ admin mới có thể upload hoặc xóa file.
+  </div>
+
+  <div>
+    <div class="kb-section-title">📂 Knowledge Files hiện tại</div>
+    <div class="kb-file-list" id="kb-file-list"><div class="kb-empty">Đang tải...</div></div>
+  </div>
+</div>
+
+<!-- Maintenance Window tab (admin only) -->
+<div id="maintenance-panel">
+  <div class="mw-info">
+    🔕 <b>Maintenance Window</b> — Tắt alert tạm thời cho một server trong khi bảo trì.<br>
+    Alert từ server được suppress sẽ bị <b>bỏ qua hoàn toàn</b>, không phân tích, không gửi Telegram.
+  </div>
+
+  <div class="users-section">
+    <div class="kb-section-title">➕ Thêm Maintenance Window</div>
+    <div class="mw-form">
+      <div class="mw-row">
+        <div class="form-row"><label>Server (IP / hostname) *</label><input id="mw-host" type="text" placeholder="10.0.0.5" /></div>
+        <div class="form-row"><label>Thời gian (giờ)</label><input id="mw-hours" type="number" value="2" min="0.5" max="168" step="0.5" /></div>
+        <div class="form-row"><label>Lý do</label><input id="mw-reason" type="text" placeholder="Upgrade, deploy, restart…" /></div>
+        <button id="mw-add-btn">🔕 Tắt cảnh báo</button>
+      </div>
+      <div id="mw-status"></div>
+    </div>
+  </div>
+
+  <div class="users-section">
+    <div class="kb-section-title">📋 Đang active</div>
+    <div class="mw-list" id="mw-list"><div class="mw-empty">Không có maintenance window nào.</div></div>
+  </div>
+</div>
+
+<!-- Inventory tab -->
+<div id="inventory-panel">
+  <input type="file" id="inv-csv-input" accept=".csv,text/csv" />
+  <div class="inv-toolbar">
+    <div class="inv-filter-group">
+      <button class="inv-filter-btn active" data-inv-type="all">🖥️ Tất cả</button>
+      <button class="inv-filter-btn" data-inv-type="server">💻 Server</button>
+      <button class="inv-filter-btn" data-inv-type="network">🌐 Network</button>
+    </div>
+    <span id="inv-count" class="inv-count">0 thiết bị</span>
+    <button class="inv-upload-btn" id="inv-upload-btn">📥 Import CSV</button>
+  </div>
+
+  <div id="inv-status"></div>
+
+  <div class="inv-table-wrap">
+    <table class="inv-table">
+      <thead>
+        <tr>
+          <th>Hostname</th>
+          <th>IP Address</th>
+          <th>Type</th>
+          <th>Monitoring Source</th>
+        </tr>
+      </thead>
+      <tbody id="inv-tbody">
+        <tr><td colspan="4" class="inv-empty">Chưa có dữ liệu. Import CSV để bắt đầu.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="inv-format-note">
+    📄 <b>Format CSV:</b> <code>hostname,ip,type,monitoring_source</code><br>
+    • <b>type</b>: <code>server</code> hoặc <code>network</code><br>
+    • <b>monitoring_source</b>: <code>prometheus</code>, <code>checkmk</code>, <code>cacti</code>
+  </div>
+</div>
+
+<!-- Users tab (admin only) -->
+<div id="users-panel">
+  <div class="users-section">
+    <div class="kb-section-title">➕ Tạo tài khoản mới</div>
+    <div class="create-user-form">
+      <div class="create-user-row">
+        <div class="form-row"><label>Username</label><input id="nu-username" type="text" placeholder="username" /></div>
+        <div class="form-row"><label>Password</label><input id="nu-password" type="password" placeholder="password" /></div>
+        <div class="form-row"><label>Role</label>
+          <select id="nu-role">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <button id="create-user-btn">➕ Tạo</button>
+      </div>
+      <div id="create-user-status"></div>
+    </div>
+  </div>
+
+  <div class="users-section">
+    <div class="kb-section-title">👤 Danh sách users</div>
+    <div class="user-list" id="user-list"><div class="kb-empty">Đang tải...</div></div>
+  </div>
+</div>
+
+<!-- Input bar -->
+<div id="input-bar">
+  <div id="input-wrapper">
+    <textarea id="msg-input" rows="1" placeholder="Nhắn để điều tra server… ví dụ: check disk on 10.0.0.5"></textarea>
+    <button id="send-btn" title="Gửi (Enter)">➤</button>
+  </div>
+  <div class="input-hint">Enter để gửi · Shift+Enter xuống dòng</div>
+</div>
+</section>
+</main>
+
+<script>
+  const ENDPOINT = window.location.origin + '/invocations';
+
+  // ── Session ─────────────────────────────────────────────────────────────────
+  let _token = sessionStorage.getItem('token') || '';
+  let _role   = sessionStorage.getItem('role')  || '';
+  let _username = sessionStorage.getItem('username') || '';
+
+  function saveSession(token, username, role) {
+    _token = token; _username = username; _role = role;
+    sessionStorage.setItem('token', token);
+    sessionStorage.setItem('username', username);
+    sessionStorage.setItem('role', role);
+  }
+
+  function clearSession() {
+    _token = ''; _username = ''; _role = '';
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('username');
+    sessionStorage.removeItem('role');
+  }
+
+  function getHeaders() {
+    return { 'Content-Type': 'application/json' };
+  }
+
+  async function api(body) {
+    const res = await fetch(ENDPOINT, {
+      method: 'POST', headers: getHeaders(),
+      body: JSON.stringify({ ...body, token: _token }),
+    });
+    return res.json();
+  }
+
+  // ── Login ────────────────────────────────────────────────────────────────────
+  const loginOverlay = document.getElementById('login-overlay');
+  const loginErr     = document.getElementById('login-error');
+  const loginBtn     = document.getElementById('login-btn');
+  const loginUser    = document.getElementById('login-user');
+  const loginPass    = document.getElementById('login-pass');
+
+  async function doLogin() {
+    const username = loginUser.value.trim();
+    const password = loginPass.value;
+    if (!username || !password) { showLoginError('Nhập đầy đủ username và password.'); return; }
+
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Đang đăng nhập…';
+    loginErr.style.display = 'none';
+
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'login', username, password }),
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        saveSession(data.token, data.username, data.role);
+        resetUI();        // clear chat + reset tabs before applying new session
+        applySession();
+        loginOverlay.classList.add('hidden');
+        loginPass.value = '';
+      } else {
+        showLoginError(data.message || 'Đăng nhập thất bại.');
+      }
+    } catch (e) {
+      showLoginError('Không kết nối được tới server.');
+    }
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Đăng nhập';
+  }
+
+  function showLoginError(msg) {
+    loginErr.textContent = msg;
+    loginErr.style.display = 'block';
+  }
+
+  loginBtn.addEventListener('click', doLogin);
+  loginUser.addEventListener('keydown', e => { if (e.key === 'Enter') loginPass.focus(); });
+  loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+  // ── Apply session state ───────────────────────────────────────────────────────
+  function applySession() {
+    document.getElementById('header-username').textContent = _username || '—';
+    const badge = document.getElementById('header-role-badge');
+    badge.textContent = _role;
+    badge.className = 'role-badge' + (_role === 'admin' ? ' admin' : '');
+
+    // Show/hide admin tab
+    document.querySelectorAll('.tab.admin-only').forEach(t => {
+      t.classList.toggle('visible', _role === 'admin');
+    });
+
+    // Show/hide admin knowledge actions
+    const isAdmin = _role === 'admin';
+    document.getElementById('kb-upload-section').style.display  = isAdmin ? '' : 'none';
+    document.getElementById('kb-readonly-notice').style.display = isAdmin ? 'none' : '';
+  }
+
+  // ── Logout ────────────────────────────────────────────────────────────────────
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await fetch(ENDPOINT, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'logout', token: _token }),
+    }).catch(() => {});
+    clearSession();
+    resetUI();
+    loginOverlay.classList.remove('hidden');
+    loginUser.value = '';
+    loginPass.value = '';
+  });
+
+  function resetUI() {
+    // Switch to chat tab immediately (prevent lingering admin-only tabs)
+    switchTab('chat');
+    // Hide admin tab instantly
+    document.querySelectorAll('.tab.admin-only').forEach(t => t.classList.remove('visible'));
+    // Clear chat history, restore welcome message
+    chatArea.innerHTML = `
+      <div class="msg agent">
+        <div class="avatar">🤖</div>
+        <div class="bubble">
+Xin chào! Tôi là <b>AI Agent Monitoring</b> — tôi có thể SSH vào server, query metrics và phân tích sự kiện.
+
+🔍 <b>Điều tra server cụ thể:</b>
+• <i>Kiểm tra CPU của server 10.0.0.1</i>
+• <i>RAM còn bao nhiêu trên 192.168.1.10</i>
+
+📊 <b>Query toàn bộ hệ thống:</b>
+• <i>CPU của tất cả server hiện tại bao nhiêu?</i>
+• <i>Server nào đang dùng nhiều RAM nhất?</i>
+
+🚨 <b>Kiểm tra cảnh báo:</b>
+• <i>Hiện tại có alert gì không?</i>
+• <i>Các sự kiện có liên quan đến nhau không?</i>
+        </div>
+      </div>`;
+  }
+
+  // ── Tabs ─────────────────────────────────────────────────────────────────────
+  const chatArea          = document.getElementById('chat-area');
+  const alertForm         = document.getElementById('alert-form');
+  const knowledgePanel    = document.getElementById('knowledge-panel');
+  const maintenancePanel  = document.getElementById('maintenance-panel');
+  const inventoryPanel    = document.getElementById('inventory-panel');
+  const usersPanel        = document.getElementById('users-panel');
+  const inputBar          = document.getElementById('input-bar');
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    const tab = document.querySelector(`.tab[data-tab="${name}"]`);
+    if (tab) tab.classList.add('active');
+    chatArea.style.display         = name === 'chat'        ? 'flex' : 'none';
+    alertForm.classList.toggle('active', name === 'alert');
+    knowledgePanel.classList.toggle('active', name === 'knowledge');
+    maintenancePanel.classList.toggle('active', name === 'maintenance');
+    inventoryPanel.classList.toggle('active', name === 'inventory');
+    usersPanel.classList.toggle('active', name === 'users');
+    inputBar.style.display         = name === 'chat'        ? 'flex' : 'none';
+    if (name === 'knowledge') loadKnowledgeList();
+    if (name === 'maintenance') loadMaintenanceList();
+    if (name === 'inventory') loadInventory();
+    if (name === 'users') loadUserList();
+  }
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  });
+
+  // ── Chat ──────────────────────────────────────────────────────────────────────
+  const msgInput = document.getElementById('msg-input');
+  const sendBtn  = document.getElementById('send-btn');
+
+  msgInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } });
+  msgInput.addEventListener('input', () => { msgInput.style.height = 'auto'; msgInput.style.height = Math.min(msgInput.scrollHeight, 160) + 'px'; });
+  sendBtn.addEventListener('click', sendChat);
+
+  async function sendChat() {
+    const text = msgInput.value.trim();
+    if (!text || sendBtn.disabled) return;
+    msgInput.value = ''; msgInput.style.height = 'auto'; sendBtn.disabled = true;
+    appendMsg('user', text);
+    const typingEl = appendTyping();
+    try {
+      const data = await api({ action: 'chat', message: text });
+      typingEl.remove();
+      if (data.auth_required) { showLoginError('Phiên hết hạn.'); loginOverlay.classList.remove('hidden'); return; }
+      renderChatResponse(data);
+    } catch (err) {
+      typingEl.remove(); appendMsg('agent', `❌ Lỗi kết nối:\n${err.message}`);
+    }
+    sendBtn.disabled = false;
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+
+  function renderChatResponse(data) {
+    if (data.error === 'no_host') { appendMsg('agent', data.summary || '❓ Không xác định được server.'); return; }
+    const summary = data.summary || JSON.stringify(data, null, 2);
+    const meta = [];
+    if (data.host && data.host !== 'unknown') meta.push(`🖥 ${data.host}`);
+    if (data.check_type) meta.push(`🔍 ${data.check_type}`);
+    if (data.commands_run?.length) meta.push(`⚡ ${data.commands_run.length} lệnh`);
+    const div = document.createElement('div');
+    div.className = 'msg agent';
+    const cmds = (data.commands_run || []).map(c => `<div class="cmd-block">$ ${escHtml(c)}</div>`).join('');
+    const metaHtml = meta.length ? `<div class="meta">${meta.map(m => `<span class="meta-tag">${escHtml(m)}</span>`).join('')}</div>` : '';
+    div.innerHTML = `<div class="avatar">🤖</div><div class="bubble">${escHtml(summary)}${cmds}${metaHtml}</div>`;
+    chatArea.appendChild(div);
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+
+  function appendMsg(role, text) {
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    div.innerHTML = `<div class="avatar">${role === 'user' ? '👤' : '🤖'}</div><div class="bubble">${escHtml(text)}</div>`;
+    chatArea.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight; return div;
+  }
+  function appendTyping() {
+    const div = document.createElement('div');
+    div.className = 'msg agent';
+    div.innerHTML = `<div class="avatar">🤖</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+    chatArea.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight; return div;
+  }
+
+  // ── Send Alert ────────────────────────────────────────────────────────────────
+  document.getElementById('send-alert-btn').addEventListener('click', async () => {
+    let labels = {};
+    try { labels = JSON.parse(document.getElementById('a-labels').value || '{}'); } catch {}
+    const payload = {
+      action: 'receive_alert',
+      alert: {
+        alert_name:  document.getElementById('a-name').value,
+        instance:    document.getElementById('a-instance').value,
+        severity:    document.getElementById('a-severity').value,
+        service:     document.getElementById('a-service').value,
+        description: document.getElementById('a-desc').value,
+        labels,
+      }
+    };
+    const respEl = document.getElementById('alert-response');
+    respEl.style.display = 'block'; respEl.textContent = 'Đang gửi cảnh báo…';
+    try {
+      const data = await api(payload);
+      respEl.textContent = JSON.stringify(data, null, 2);
+    } catch (err) { respEl.textContent = `Error: ${err.message}`; }
+  });
+
+  // ── Simulate correlated alerts ─────────────────────────────────────
+  let lastSimulatedBatchId = '';
+  const simulateBtn = document.getElementById('simulate-btn');
+  const triggerBatchBtn = document.getElementById('trigger-batch-btn');
+  if (simulateBtn) {
+    simulateBtn.addEventListener('click', async () => {
+      const btn = simulateBtn;
+      const box = document.getElementById('sim-result-box');
+      const respEl = document.getElementById('alert-response');
+      btn.disabled = true; btn.textContent = '⚙️ Đang tạo kịch bản...';
+      lastSimulatedBatchId = '';
+      if (triggerBatchBtn) triggerBatchBtn.style.display = 'none';
+      if (box) box.style.display = 'none';
+      respEl.style.display = 'none';
+      try {
+        const data = await api({ action: 'simulate_correlated_alerts' });
+        if (data.status === 'ok') {
+          const batchIds = data.batch_ids || [];
+          lastSimulatedBatchId = batchIds[0] || '';
+          const sevClass = s => s === 'critical' ? 'critical' : 'warning';
+          const sevLabel = s => s === 'critical' ? 'Nghiêm trọng' : 'Cảnh báo';
+          const batchText = escHtml(batchIds.join(', ') || '-');
+          const rows = (data.alerts || []).map(a => `
+            <div class="sim-alert-item">
+              <span class="sim-badge ${sevClass(a.severity)}">${sevLabel(a.severity)}</span>
+              <div>
+                <div class="sim-alert-name">${escHtml(a.alert_name)}</div>
+                <div>
+                  <span class="sim-host">${escHtml(a.hostname || a.instance)} (${escHtml(a.instance)})</span>
+                  <span class="sim-service">${escHtml(a.service || 'service')}</span>
+                </div>
+                <span class="sim-desc">${escHtml(a.description)}</span>
+              </div>
+            </div>`).join('');
+          if (box) {
+            box.innerHTML = `<div class="sim-result">
+              <div class="sim-card-header">
+                <div class="sim-icon">🎲</div>
+                <div>
+                  <div class="sim-kicker">Kịch bản RCA ngẫu nhiên</div>
+                  <div class="sim-title">Kịch bản: <span>${escHtml(data.scenario)}</span></div>
+                  <div class="sim-subtitle">Các alert đã được gửi vào cùng batch để mô phỏng một sự cố có liên quan.</div>
+                </div>
+              </div>
+              <div class="sim-meta-grid">
+                <div class="sim-metric">
+                  <div class="sim-metric-label">Alert</div>
+                  <div class="sim-metric-value">${escHtml(data.alerts_sent)} sự kiện</div>
+                </div>
+                <div class="sim-metric">
+                  <div class="sim-metric-label">Batch</div>
+                  <div class="sim-metric-value"><code>${batchText}</code></div>
+                </div>
+                <div class="sim-metric">
+                  <div class="sim-metric-label">Bước tiếp theo</div>
+                  <div class="sim-metric-value">Chạy RCA ngay</div>
+                </div>
+              </div>
+              <div class="sim-alert-list">${rows}</div>
+            </div>`;
+            box.style.display = 'block';
+          }
+          if (triggerBatchBtn && lastSimulatedBatchId) {
+            triggerBatchBtn.style.display = 'inline-block';
+            triggerBatchBtn.textContent = `▶ Chạy RCA ngay (${lastSimulatedBatchId})`;
+          }
+        } else if (box) {
+          box.innerHTML = `<div class="sim-error">❌ ${escHtml(data.message || 'Error')}</div>`;
+          box.style.display = 'block';
+        }
+      } catch (err) {
+        if (!box) return;
+        box.innerHTML = `<div class="sim-error">❌ ${escHtml(err.message)}</div>`;
+        box.style.display = 'block';
+      } finally {
+        btn.disabled = false; btn.textContent = '🎲 Tạo kịch bản RCA';
+      }
+    });
+  }
+
+  if (triggerBatchBtn) {
+    triggerBatchBtn.addEventListener('click', async () => {
+      const box = document.getElementById('sim-result-box');
+      if (!lastSimulatedBatchId) return;
+      triggerBatchBtn.disabled = true;
+      triggerBatchBtn.textContent = '⚙️ Đang chạy RCA...';
+      try {
+        const data = await api({ action: 'trigger_batch', batch_id: lastSimulatedBatchId });
+        const ok = data.status === 'triggered';
+        if (box) {
+          box.style.display = 'block';
+          box.innerHTML += `<div class="sim-trigger-result ${ok ? '' : 'error'}">
+            ${ok ? '✅' : '❌'} ${ok ? `Đã trigger RCA ngay cho batch ${escHtml(data.batch_id)}. Telegram sẽ gửi sau khi agent xử lý xong.` : escHtml(data.message || 'Không trigger được batch.')}
+          </div>`;
+        }
+        if (ok) triggerBatchBtn.style.display = 'none';
+      } catch (err) {
+        if (box) {
+          box.style.display = 'block';
+          box.innerHTML += `<div class="sim-trigger-result error">❌ ${escHtml(err.message)}</div>`;
+        }
+      } finally {
+        triggerBatchBtn.disabled = false;
+        triggerBatchBtn.textContent = lastSimulatedBatchId ? `▶ Chạy RCA ngay (${lastSimulatedBatchId})` : '▶ Chạy RCA ngay';
+      }
+    });
+  }
+
+  // ── Knowledge Base ────────────────────────────────────────────────────────────
+  let kbFileContent = '';
+  const dropZone     = document.getElementById('drop-zone');
+  const kbFileInput  = document.getElementById('kb-file-input');
+  const kbFilename   = document.getElementById('kb-filename');
+  const kbPreview    = document.getElementById('kb-preview');
+  const kbUploadBtn  = document.getElementById('kb-upload-btn');
+  const kbStatus     = document.getElementById('kb-status');
+  const kbFileList   = document.getElementById('kb-file-list');
+  const kbFilenameRow = document.getElementById('kb-filename-row');
+
+  dropZone.addEventListener('click', () => kbFileInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); if (e.dataTransfer.files[0]) readKbFile(e.dataTransfer.files[0]); });
+  kbFileInput.addEventListener('change', () => { if (kbFileInput.files[0]) readKbFile(kbFileInput.files[0]); });
+
+  function readKbFile(file) {
+    if (!file.name.endsWith('.md')) { alert('Chỉ hỗ trợ file .md'); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      kbFileContent = e.target.result;
+      kbFilename.value = file.name;
+      kbPreview.textContent = kbFileContent.slice(0, 500) + (kbFileContent.length > 500 ? '\n...' : '');
+      kbPreview.style.display = 'block';
+      kbFilenameRow.style.display = 'flex';
+      kbStatus.style.display = 'none';
+    };
+    reader.readAsText(file);
+  }
+
+  kbUploadBtn.addEventListener('click', async () => {
+    if (!kbFileContent || !kbFilename.value) return;
+    kbUploadBtn.disabled = true; kbStatus.style.display = 'none';
+    try {
+      const data = await api({ action: 'upload_knowledge', filename: kbFilename.value, content: kbFileContent });
+      kbStatus.style.display = 'block';
+      kbStatus.style.color = data.status === 'ok' ? '#047857' : '#b91c1c';
+      kbStatus.textContent = data.status === 'ok' ? `✅ Đã lưu: ${data.filename}` : `❌ Lỗi: ${data.message}`;
+      if (data.status === 'ok') { kbFileContent = ''; kbPreview.style.display = 'none'; kbFilenameRow.style.display = 'none'; kbFileInput.value = ''; loadKnowledgeList(); }
+    } catch(err) { kbStatus.style.display = 'block'; kbStatus.style.color = '#b91c1c'; kbStatus.textContent = `❌ ${err.message}`; }
+    kbUploadBtn.disabled = false;
+  });
+
+  async function loadKnowledgeList() {
+    kbFileList.innerHTML = '<div class="kb-empty">Đang tải...</div>';
+    try {
+      const data = await api({ action: 'list_knowledge' });
+      const files = data.files || [];
+      if (!files.length) { kbFileList.innerHTML = '<div class="kb-empty">Chưa có knowledge file nào.</div>'; return; }
+      const isAdmin = _role === 'admin';
+      kbFileList.innerHTML = files.map(f => `
+        <div class="kb-file-item">
+          <span class="kb-file-icon">📄</span>
+          <span class="kb-file-name">${escHtml(f.name)}</span>
+          <span class="kb-file-size">${(f.size/1024).toFixed(1)} KB</span>
+          ${isAdmin ? `<button class="kb-file-del" onclick="deleteKbFile('${escHtml(f.name)}')">🗑 Xóa</button>` : ''}
+        </div>`).join('');
+    } catch(err) { kbFileList.innerHTML = `<div class="kb-empty">❌ ${err.message}</div>`; }
+  }
+
+  async function deleteKbFile(name) {
+    if (!confirm(`Xóa file "${name}"?`)) return;
+    const data = await api({ action: 'delete_knowledge', filename: name });
+    if (data.status === 'ok') loadKnowledgeList(); else alert(data.message);
+  }
+
+  // ── Users (admin) ─────────────────────────────────────────────────────────────
+  async function loadUserList() {
+    const userList = document.getElementById('user-list');
+    userList.innerHTML = '<div class="kb-empty">Đang tải...</div>';
+    try {
+      const data = await api({ action: 'list_users' });
+      const users = data.users || [];
+      if (!users.length) { userList.innerHTML = '<div class="kb-empty">Chưa có user.</div>'; return; }
+      userList.innerHTML = users.map(u => `
+        <div class="user-item">
+          <span class="kb-file-icon">${u.role === 'admin' ? '👑' : '👤'}</span>
+          <span class="user-item-name">${escHtml(u.username)}</span>
+          <span class="role-badge ${u.role === 'admin' ? 'admin' : ''}">${escHtml(u.role)}</span>
+          <span class="user-item-date">${u.created_at ? u.created_at.slice(0,10) : ''}</span>
+          <button class="user-item-del" onclick="deleteUser('${escHtml(u.username)}')"
+            ${u.username === _username ? 'disabled title="Không thể tự xóa mình"' : ''}>🗑 Xóa</button>
+        </div>`).join('');
+    } catch(err) { userList.innerHTML = `<div class="kb-empty">❌ ${err.message}</div>`; }
+  }
+
+  document.getElementById('create-user-btn').addEventListener('click', async () => {
+    const username = document.getElementById('nu-username').value.trim();
+    const password = document.getElementById('nu-password').value;
+    const role     = document.getElementById('nu-role').value;
+    const statusEl = document.getElementById('create-user-status');
+
+    if (!username || !password) { statusEl.style.display='block'; statusEl.style.color='#b91c1c'; statusEl.textContent='Username và password không được để trống.'; return; }
+
+    const data = await api({ action: 'create_user', username, password, role });
+    statusEl.style.display = 'block';
+    if (data.status === 'ok') {
+      statusEl.style.color = '#047857';
+      statusEl.textContent = `✅ Tạo thành công: ${data.username} (${data.role})`;
+      document.getElementById('nu-username').value = '';
+      document.getElementById('nu-password').value = '';
+      loadUserList();
+    } else {
+      statusEl.style.color = '#b91c1c';
+      statusEl.textContent = `❌ ${data.message}`;
+    }
+  });
+
+  async function deleteUser(username) {
+    if (!confirm(`Xóa user "${username}"?`)) return;
+    const data = await api({ action: 'delete_user', username });
+    if (data.status === 'ok') loadUserList(); else alert(data.message);
+  }
+
+  // ── Maintenance Window ────────────────────────────────────────────────────────
+  document.getElementById('mw-add-btn').addEventListener('click', async () => {
+    const host    = document.getElementById('mw-host').value.trim();
+    const hours   = parseFloat(document.getElementById('mw-hours').value) || 2;
+    const reason  = document.getElementById('mw-reason').value.trim() || 'Maintenance';
+    const statusEl = document.getElementById('mw-status');
+
+    if (!host) {
+      statusEl.style.display = 'block'; statusEl.style.color = '#b91c1c';
+      statusEl.textContent = '❌ Nhập IP hoặc hostname của server.';
+      return;
+    }
+
+    const data = await api({ action: 'suppress_server', instance: host, hours, reason });
+    statusEl.style.display = 'block';
+    if (data.status === 'ok') {
+      statusEl.style.color = '#b45309';
+      const until = new Date(data.until + 'Z').toLocaleString('vi-VN');
+      statusEl.textContent = `✅ Đã suppress ${host} đến ${until}`;
+      document.getElementById('mw-host').value = '';
+      document.getElementById('mw-reason').value = '';
+      loadMaintenanceList();
+    } else {
+      statusEl.style.color = '#b91c1c';
+      statusEl.textContent = `❌ ${data.message}`;
+    }
+  });
+
+  async function loadMaintenanceList() {
+    const list = document.getElementById('mw-list');
+    list.innerHTML = '<div class="mw-empty">Đang tải...</div>';
+    try {
+      const data = await api({ action: 'list_suppressions' });
+      const items = data.suppressions || [];
+      if (!items.length) {
+        list.innerHTML = '<div class="mw-empty">✅ Không có maintenance window nào đang active.</div>';
+        return;
+      }
+      list.innerHTML = items.map(s => {
+        const until = new Date(s.until + 'Z').toLocaleString('vi-VN');
+        return `<div class="mw-item">
+          <span class="mw-item-host">🖥 ${escHtml(s.instance)}</span>
+          <span class="mw-item-reason">${escHtml(s.reason)}</span>
+          <span class="mw-item-until">đến ${escHtml(until)}</span>
+          <button class="mw-item-del" onclick="removeMaintenance('${escHtml(s.instance)}')">✕ Bỏ</button>
+        </div>`;
+      }).join('');
+    } catch(err) {
+      list.innerHTML = `<div class="mw-empty">❌ ${err.message}</div>`;
+    }
+  }
+
+  async function removeMaintenance(instance) {
+    if (!confirm(`Hủy maintenance window cho "${instance}"?`)) return;
+    const data = await api({ action: 'remove_suppression', instance });
+    if (data.status === 'ok') loadMaintenanceList(); else alert(data.message);
+  }
+
+  // ── Inventory ────────────────────────────────────────────────────────────────
+  let currentInvType = 'all';
+  const invTbody = document.getElementById('inv-tbody');
+  const invCount = document.getElementById('inv-count');
+  const invStatus = document.getElementById('inv-status');
+  const invCsvInput = document.getElementById('inv-csv-input');
+
+  document.querySelectorAll('.inv-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.inv-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentInvType = btn.dataset.invType || 'all';
+      loadInventory();
+    });
+  });
+
+  document.getElementById('inv-upload-btn').addEventListener('click', () => invCsvInput.click());
+  invCsvInput.addEventListener('change', () => {
+    const file = invCsvInput.files && invCsvInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async e => {
+      invStatus.style.display = 'block';
+      invStatus.style.color = '#667085';
+      invStatus.textContent = 'Đang import CSV...';
+      try {
+        const data = await api({ action: 'upload_inventory', csv_content: e.target.result });
+        invStatus.style.color = data.status === 'ok' ? '#047857' : '#b91c1c';
+        invStatus.textContent = data.status === 'ok' ? `✅ ${data.message}` : `❌ ${data.message}`;
+        if (data.status === 'ok') loadInventory();
+      } catch (err) {
+        invStatus.style.color = '#b91c1c';
+        invStatus.textContent = `❌ ${err.message}`;
+      } finally {
+        invCsvInput.value = '';
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  async function loadInventory() {
+    invTbody.innerHTML = '<tr><td colspan="4" class="inv-empty">Đang tải...</td></tr>';
+    try {
+      const payload = { action: 'list_inventory' };
+      if (currentInvType !== 'all') payload.type = currentInvType;
+      const data = await api(payload);
+      const items = data.inventory || [];
+      invCount.textContent = `${items.length} thiết bị`;
+      if (!items.length) {
+        invTbody.innerHTML = '<tr><td colspan="4" class="inv-empty">Chưa có dữ liệu phù hợp.</td></tr>';
+        return;
+      }
+      invTbody.innerHTML = items.map(item => {
+        const type = item.type === 'network' ? 'network' : 'server';
+        const typeText = type === 'network' ? 'Network' : 'Server';
+        return `<tr>
+          <td>${escHtml(item.hostname)}</td>
+          <td><code>${escHtml(item.ip)}</code></td>
+          <td><span class="inv-badge inv-badge-${type}">${typeText}</span></td>
+          <td><span class="inv-badge inv-badge-source">${escHtml(item.monitoring_source || '-')}</span></td>
+        </tr>`;
+      }).join('');
+    } catch (err) {
+      invTbody.innerHTML = `<tr><td colspan="4" class="inv-empty">❌ ${escHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // ── Utils ─────────────────────────────────────────────────────────────────────
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*(.*?)\*\*/g,'<b>$1</b>')
+      .replace(/### (.*?)(\n|$)/g,'<b style="font-size:15px">$1</b>$2')
+      .replace(/## (.*?)(\n|$)/g,'<b style="font-size:15px;color:#1d5fd2">$1</b>$2')
+      .replace(/\n/g,'<br>');
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+  // AUTH_ENABLED = false (demo public) — vào thẳng dashboard, không cần login.
+  // Để bật lại login: đổi AUTH_ENABLED=True trong main.py và uncomment login overlay + header buttons ở trên.
+  _role = 'admin';
+  _username = 'guest';
+  document.querySelectorAll('.tab.admin-only').forEach(t => t.classList.add('visible'));
+  loginOverlay.classList.add('hidden');
+
+  /* AUTH_ENABLED = true — uncomment block này để bật login:
+  if (_token && _username && _role) {
+    applySession();
+    loginOverlay.classList.add('hidden');
+  }
+  */
+</script>
+</body>
+</html>

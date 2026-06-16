@@ -1,0 +1,34 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Local secrets
+.env
+.env.*
+!.env.example
+!.env.greennode.example
+credentials.json
+token.json
+
+# Runtime output
+reports/*.pdf
+reports/*.html
+reports/*.csv
+data/*
+!data/.gitkeep
+state/*.json
+logs/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.greennode.json
+.agentbase/

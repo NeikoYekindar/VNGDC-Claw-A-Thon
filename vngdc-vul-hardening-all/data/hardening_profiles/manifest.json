@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "profiles": {
+    "ubuntu": {
+      "display_name": "Ubuntu 24.04",
+      "profile_dir": "ubuntu_24_04",
+      "controls_file": "controls.json",
+      "apply_commands_file": "apply_hardening.sh",
+      "verification_procedure_file": "post_config_verification.md",
+      "verification_script": "verify_config_template.sh",
+      "check_script": "verify_config_template.sh"
+    },
+    "windows": {
+      "display_name": "Windows Server 2022",
+      "profile_dir": "windows_2022",
+      "controls_file": "controls.json",
+      "apply_commands_file": "apply_hardening.ps1",
+      "check_script": "../scripts/windows_2022/hardening_checks.ps1"
+    },
+    "junos": {
+      "display_name": "Juniper Junos Switch",
+      "profile_dir": "juniper_junos",
+      "controls_file": "controls.json",
+      "apply_commands_file": "apply_hardening.set",
+      "verification_procedure_file": "post_config_verification.md",
+      "verification_script": "verify_config_template.junos",
+      "check_script": "verify_config_template.junos"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+!.env.*.example
+.greennode.json
+.agentbase/
+.agentbase-state.json
+*.credentials.json
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Node / Next.js generated files
+node_modules/
+.next/
+out/
+.turbo/
+.parcel-cache/
+*.tsbuildinfo
+
+# Local runtime data and exports
+*.sqlite
+*.sqlite3
+dashboard.db
+dashboard_data/
+reports/
+exports/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log

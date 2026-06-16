@@ -1,0 +1,78 @@
+# Juniper Junos switch hardening baseline - example set commands.
+# Review values before applying. Do not paste secrets into a shared repo.
+#
+# Usage on Junos:
+#   configure
+#   load set apply_hardening.set
+#   show | compare
+#   commit confirmed 5 comment "Apply VNGDC Junos hardening baseline"
+#   commit
+
+# Management services
+set system services ssh
+delete system services telnet
+delete system services web-management http
+# Optional when J-Web is required:
+# set system services web-management https system-generated-certificate
+# Optional when automation requires NETCONF:
+# set system services netconf ssh
+
+# Authentication and admin access
+# Replace hashes/keys/users with approved production values.
+# set system root-authentication encrypted-password "<encrypted-password-hash>"
+# set system login user netadmin class super-user authentication ssh-ed25519 "<public-key>"
+set system login retry-options tries-before-disconnect 3
+set system login retry-options backoff-threshold 3
+set system login retry-options backoff-factor 5
+set system login retry-options minimum-time 30
+set system login class operations idle-timeout 10
+
+# AAA example - uncomment and set real values if Radius/TACACS+ is used.
+# set system authentication-order radius
+# set system authentication-order password
+# set system radius-server 10.10.10.10 secret "<secret>"
+# set system tacplus-server 10.10.10.11 secret "<secret>"
+
+# Logging and audit
+set system syslog file messages any notice
+set system syslog file messages authorization info
+set system syslog file interactive-commands interactive-commands any
+# Replace with SIEM/syslog collector.
+# set system syslog host 10.10.20.20 any info
+# set system syslog host 10.10.20.20 authorization info
+# set system syslog host 10.10.20.20 interactive-commands any
+
+# Time synchronization
+set system time-zone Asia/Ho_Chi_Minh
+# Replace with approved NTP servers.
+# set system ntp server 10.10.30.10
+# set system ntp server 10.10.30.11
+
+# SNMP
+delete snmp community public
+delete snmp community private
+# Prefer SNMPv3. If SNMPv2 community is required, restrict collectors.
+# set snmp community "<community>" authorization read-only
+# set snmp community "<community>" clients 10.10.40.10/32
+# set snmp v3 usm local-engine user monitor authentication-sha authentication-password "<auth-password>"
+# set snmp v3 usm local-engine user monitor privacy-aes128 privacy-password "<privacy-password>"
+
+# Control-plane protection example.
+# Adjust prefixes and allowed protocols before applying.
+# set policy-options prefix-list MGMT-SOURCES 10.10.0.0/16
+# set firewall family inet filter PROTECT-RE term ALLOW-SSH from source-prefix-list MGMT-SOURCES
+# set firewall family inet filter PROTECT-RE term ALLOW-SSH from protocol tcp
+# set firewall family inet filter PROTECT-RE term ALLOW-SSH from destination-port ssh
+# set firewall family inet filter PROTECT-RE term ALLOW-SSH then accept
+# set firewall family inet filter PROTECT-RE term ALLOW-NTP from protocol udp
+# set firewall family inet filter PROTECT-RE term ALLOW-NTP from destination-port ntp
+# set firewall family inet filter PROTECT-RE term ALLOW-NTP then accept
+# set firewall family inet filter PROTECT-RE term DEFAULT-DENY then discard
+# set interfaces lo0 unit 0 family inet filter input PROTECT-RE
+
+# Configuration archival - use SSH/SCP/HTTPS repository approved by operations.
+# set system archival configuration transfer-on-commit
+# set system archival configuration archive-sites "scp://backup-user@10.10.50.10/junos/$HOSTNAME" password "<secret>"
+
+# Legal banner
+set system login announcement "Authorized access only. Activity may be monitored and logged."

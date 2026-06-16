@@ -1,0 +1,439 @@
+{
+  "os_type": "ubuntu",
+  "display_name": "Ubuntu 24.04",
+  "description": "Ubuntu hardening baseline aligned with the configured package, timezone, and sensitive-file permission commands.",
+  "controls": [
+    {
+      "id": "UBU-APT-001",
+      "section": "SYSTEM UPDATES",
+      "setting": "apt metadata",
+      "expected": "refreshed within 7 days",
+      "check": "APT package metadata should be recently refreshed after apt update.",
+      "remediation": "sudo apt update"
+    },
+    {
+      "id": "UBU-APT-002",
+      "section": "SYSTEM UPDATES",
+      "setting": "package upgrades",
+      "expected": "0 upgradable packages",
+      "check": "No package upgrades should remain immediately after apt upgrade -y.",
+      "remediation": "sudo apt update && sudo apt upgrade -y"
+    },
+    {
+      "id": "UBU-PKG-001",
+      "section": "REQUIRED PACKAGES",
+      "setting": "curl",
+      "expected": "installed",
+      "check": "curl package must be installed.",
+      "remediation": "sudo apt install -y curl"
+    },
+    {
+      "id": "UBU-PKG-002",
+      "section": "REQUIRED PACKAGES",
+      "setting": "wget",
+      "expected": "installed",
+      "check": "wget package must be installed.",
+      "remediation": "sudo apt install -y wget"
+    },
+    {
+      "id": "UBU-PKG-003",
+      "section": "REQUIRED PACKAGES",
+      "setting": "vim",
+      "expected": "installed",
+      "check": "vim package must be installed.",
+      "remediation": "sudo apt install -y vim"
+    },
+    {
+      "id": "UBU-PKG-004",
+      "section": "REQUIRED PACKAGES",
+      "setting": "nano",
+      "expected": "installed",
+      "check": "nano package must be installed.",
+      "remediation": "sudo apt install -y nano"
+    },
+    {
+      "id": "UBU-PKG-005",
+      "section": "REQUIRED PACKAGES",
+      "setting": "tmux",
+      "expected": "installed",
+      "check": "tmux package must be installed.",
+      "remediation": "sudo apt install -y tmux"
+    },
+    {
+      "id": "UBU-PKG-006",
+      "section": "REQUIRED PACKAGES",
+      "setting": "less",
+      "expected": "installed",
+      "check": "less package must be installed.",
+      "remediation": "sudo apt install -y less"
+    },
+    {
+      "id": "UBU-PKG-007",
+      "section": "REQUIRED PACKAGES",
+      "setting": "tree",
+      "expected": "installed",
+      "check": "tree package must be installed.",
+      "remediation": "sudo apt install -y tree"
+    },
+    {
+      "id": "UBU-PKG-008",
+      "section": "REQUIRED PACKAGES",
+      "setting": "file",
+      "expected": "installed",
+      "check": "file package must be installed.",
+      "remediation": "sudo apt install -y file"
+    },
+    {
+      "id": "UBU-PKG-009",
+      "section": "REQUIRED PACKAGES",
+      "setting": "htop",
+      "expected": "installed",
+      "check": "htop package must be installed.",
+      "remediation": "sudo apt install -y htop"
+    },
+    {
+      "id": "UBU-PKG-010",
+      "section": "REQUIRED PACKAGES",
+      "setting": "cron",
+      "expected": "installed",
+      "check": "cron package must be installed.",
+      "remediation": "sudo apt install -y cron"
+    },
+    {
+      "id": "UBU-PKG-011",
+      "section": "REQUIRED PACKAGES",
+      "setting": "iptables",
+      "expected": "installed",
+      "check": "iptables package must be installed.",
+      "remediation": "sudo apt install -y iptables"
+    },
+    {
+      "id": "UBU-PKG-012",
+      "section": "REQUIRED PACKAGES",
+      "setting": "iptables-persistent",
+      "expected": "installed",
+      "check": "iptables-persistent package must be installed.",
+      "remediation": "sudo apt install -y iptables-persistent"
+    },
+    {
+      "id": "UBU-PKG-013",
+      "section": "REQUIRED PACKAGES",
+      "setting": "libpam-radius-auth",
+      "expected": "installed",
+      "check": "libpam-radius-auth package must be installed.",
+      "remediation": "sudo apt install -y libpam-radius-auth"
+    },
+    {
+      "id": "UBU-PKG-014",
+      "section": "REQUIRED PACKAGES",
+      "setting": "libpam-pwquality",
+      "expected": "installed",
+      "check": "libpam-pwquality package must be installed.",
+      "remediation": "sudo apt install -y libpam-pwquality"
+    },
+    {
+      "id": "UBU-PKG-015",
+      "section": "REQUIRED PACKAGES",
+      "setting": "fail2ban",
+      "expected": "installed",
+      "check": "fail2ban package must be installed.",
+      "remediation": "sudo apt install -y fail2ban"
+    },
+    {
+      "id": "UBU-PKG-016",
+      "section": "REQUIRED PACKAGES",
+      "setting": "openssh-server",
+      "expected": "installed",
+      "check": "openssh-server package must be installed.",
+      "remediation": "sudo apt install -y openssh-server"
+    },
+    {
+      "id": "UBU-PKG-017",
+      "section": "REQUIRED PACKAGES",
+      "setting": "rsyslog",
+      "expected": "installed",
+      "check": "rsyslog package must be installed.",
+      "remediation": "sudo apt install -y rsyslog"
+    },
+    {
+      "id": "UBU-PKG-018",
+      "section": "REQUIRED PACKAGES",
+      "setting": "zip",
+      "expected": "installed",
+      "check": "zip package must be installed.",
+      "remediation": "sudo apt install -y zip"
+    },
+    {
+      "id": "UBU-PKG-019",
+      "section": "REQUIRED PACKAGES",
+      "setting": "unzip",
+      "expected": "installed",
+      "check": "unzip package must be installed.",
+      "remediation": "sudo apt install -y unzip"
+    },
+    {
+      "id": "UBU-PKG-020",
+      "section": "REQUIRED PACKAGES",
+      "setting": "tar",
+      "expected": "installed",
+      "check": "tar package must be installed.",
+      "remediation": "sudo apt install -y tar"
+    },
+    {
+      "id": "UBU-PKG-021",
+      "section": "REQUIRED PACKAGES",
+      "setting": "gzip",
+      "expected": "installed",
+      "check": "gzip package must be installed.",
+      "remediation": "sudo apt install -y gzip"
+    },
+    {
+      "id": "UBU-PKG-022",
+      "section": "REQUIRED PACKAGES",
+      "setting": "bzip2",
+      "expected": "installed",
+      "check": "bzip2 package must be installed.",
+      "remediation": "sudo apt install -y bzip2"
+    },
+    {
+      "id": "UBU-PKG-023",
+      "section": "REQUIRED PACKAGES",
+      "setting": "net-tools",
+      "expected": "installed",
+      "check": "net-tools package must be installed.",
+      "remediation": "sudo apt install -y net-tools"
+    },
+    {
+      "id": "UBU-PKG-024",
+      "section": "REQUIRED PACKAGES",
+      "setting": "iproute2",
+      "expected": "installed",
+      "check": "iproute2 package must be installed.",
+      "remediation": "sudo apt install -y iproute2"
+    },
+    {
+      "id": "UBU-PKG-025",
+      "section": "REQUIRED PACKAGES",
+      "setting": "iputils-ping",
+      "expected": "installed",
+      "check": "iputils-ping package must be installed.",
+      "remediation": "sudo apt install -y iputils-ping"
+    },
+    {
+      "id": "UBU-PKG-026",
+      "section": "REQUIRED PACKAGES",
+      "setting": "traceroute",
+      "expected": "installed",
+      "check": "traceroute package must be installed.",
+      "remediation": "sudo apt install -y traceroute"
+    },
+    {
+      "id": "UBU-PKG-027",
+      "section": "REQUIRED PACKAGES",
+      "setting": "dnsutils",
+      "expected": "installed",
+      "check": "dnsutils package must be installed.",
+      "remediation": "sudo apt install -y dnsutils"
+    },
+    {
+      "id": "UBU-PKG-028",
+      "section": "REQUIRED PACKAGES",
+      "setting": "whois",
+      "expected": "installed",
+      "check": "whois package must be installed.",
+      "remediation": "sudo apt install -y whois"
+    },
+    {
+      "id": "UBU-PKG-029",
+      "section": "REQUIRED PACKAGES",
+      "setting": "nmap",
+      "expected": "installed",
+      "check": "nmap package must be installed.",
+      "remediation": "sudo apt install -y nmap"
+    },
+    {
+      "id": "UBU-PKG-030",
+      "section": "REQUIRED PACKAGES",
+      "setting": "socat",
+      "expected": "installed",
+      "check": "socat package must be installed.",
+      "remediation": "sudo apt install -y socat"
+    },
+    {
+      "id": "UBU-PKG-031",
+      "section": "REQUIRED PACKAGES",
+      "setting": "tcpdump",
+      "expected": "installed",
+      "check": "tcpdump package must be installed.",
+      "remediation": "sudo apt install -y tcpdump"
+    },
+    {
+      "id": "UBU-PKG-032",
+      "section": "REQUIRED PACKAGES",
+      "setting": "mtr",
+      "expected": "installed",
+      "check": "mtr package must be installed.",
+      "remediation": "sudo apt install -y mtr"
+    },
+    {
+      "id": "UBU-PKG-033",
+      "section": "REQUIRED PACKAGES",
+      "setting": "ethtool",
+      "expected": "installed",
+      "check": "ethtool package must be installed.",
+      "remediation": "sudo apt install -y ethtool"
+    },
+    {
+      "id": "UBU-PKG-034",
+      "section": "REQUIRED PACKAGES",
+      "setting": "lsof",
+      "expected": "installed",
+      "check": "lsof package must be installed.",
+      "remediation": "sudo apt install -y lsof"
+    },
+    {
+      "id": "UBU-PKG-035",
+      "section": "REQUIRED PACKAGES",
+      "setting": "sysstat",
+      "expected": "installed",
+      "check": "sysstat package must be installed.",
+      "remediation": "sudo apt install -y sysstat"
+    },
+    {
+      "id": "UBU-PKG-036",
+      "section": "REQUIRED PACKAGES",
+      "setting": "iotop",
+      "expected": "installed",
+      "check": "iotop package must be installed.",
+      "remediation": "sudo apt install -y iotop"
+    },
+    {
+      "id": "UBU-PKG-037",
+      "section": "REQUIRED PACKAGES",
+      "setting": "iftop",
+      "expected": "installed",
+      "check": "iftop package must be installed.",
+      "remediation": "sudo apt install -y iftop"
+    },
+    {
+      "id": "UBU-PKG-038",
+      "section": "REQUIRED PACKAGES",
+      "setting": "ncdu",
+      "expected": "installed",
+      "check": "ncdu package must be installed.",
+      "remediation": "sudo apt install -y ncdu"
+    },
+    {
+      "id": "UBU-PKG-039",
+      "section": "REQUIRED PACKAGES",
+      "setting": "parted",
+      "expected": "installed",
+      "check": "parted package must be installed.",
+      "remediation": "sudo apt install -y parted"
+    },
+    {
+      "id": "UBU-PKG-040",
+      "section": "REQUIRED PACKAGES",
+      "setting": "smartmontools",
+      "expected": "installed",
+      "check": "smartmontools package must be installed.",
+      "remediation": "sudo apt install -y smartmontools"
+    },
+    {
+      "id": "UBU-PKG-041",
+      "section": "REQUIRED PACKAGES",
+      "setting": "psmisc",
+      "expected": "installed",
+      "check": "psmisc package must be installed.",
+      "remediation": "sudo apt install -y psmisc"
+    },
+    {
+      "id": "UBU-TIME-001",
+      "section": "TIMEZONE",
+      "setting": "timezone",
+      "expected": "Asia/Ho_Chi_Minh",
+      "check": "System timezone must be Asia/Ho_Chi_Minh.",
+      "remediation": "sudo timedatectl set-timezone Asia/Ho_Chi_Minh"
+    },
+    {
+      "id": "UBU-FILE-001",
+      "section": "SENSITIVE FILE PERMISSIONS",
+      "setting": "/etc/passwd",
+      "expected": "644 root:root",
+      "check": "/etc/passwd must be world-readable and owned by root.",
+      "remediation": "sudo chmod 644 /etc/passwd && sudo chown root:root /etc/passwd"
+    },
+    {
+      "id": "UBU-FILE-002",
+      "section": "SENSITIVE FILE PERMISSIONS",
+      "setting": "/etc/passwd-",
+      "expected": "644 root:root",
+      "check": "/etc/passwd- must be world-readable and owned by root.",
+      "remediation": "sudo chmod 644 /etc/passwd- && sudo chown root:root /etc/passwd-"
+    },
+    {
+      "id": "UBU-FILE-003",
+      "section": "SENSITIVE FILE PERMISSIONS",
+      "setting": "/etc/group",
+      "expected": "644 root:root",
+      "check": "/etc/group must be world-readable and owned by root.",
+      "remediation": "sudo chmod 644 /etc/group && sudo chown root:root /etc/group"
+    },
+    {
+      "id": "UBU-FILE-004",
+      "section": "SENSITIVE FILE PERMISSIONS",
+      "setting": "/etc/group-",
+      "expected": "644 root:root",
+      "check": "/etc/group- must be world-readable and owned by root.",
+      "remediation": "sudo chmod 644 /etc/group- && sudo chown root:root /etc/group-"
+    },
+    {
+      "id": "UBU-FILE-005",
+      "section": "SENSITIVE FILE PERMISSIONS",
+      "setting": "/etc/shadow",
+      "expected": "640 root:shadow",
+      "check": "/etc/shadow must be readable only by root and shadow group.",
+      "remediation": "sudo chmod 640 /etc/shadow && sudo chown root:shadow /etc/shadow"
+    },
+    {
+      "id": "UBU-FILE-006",
+      "section": "SENSITIVE FILE PERMISSIONS",
+      "setting": "/etc/shadow-",
+      "expected": "640 root:shadow",
+      "check": "/etc/shadow- must be readable only by root and shadow group.",
+      "remediation": "sudo chmod 640 /etc/shadow- && sudo chown root:shadow /etc/shadow-"
+    },
+    {
+      "id": "UBU-FILE-007",
+      "section": "SENSITIVE FILE PERMISSIONS",
+      "setting": "/etc/gshadow",
+      "expected": "640 root:shadow",
+      "check": "/etc/gshadow must be readable only by root and shadow group.",
+      "remediation": "sudo chmod 640 /etc/gshadow && sudo chown root:shadow /etc/gshadow"
+    },
+    {
+      "id": "UBU-FILE-008",
+      "section": "SENSITIVE FILE PERMISSIONS",
+      "setting": "/etc/gshadow-",
+      "expected": "640 root:shadow",
+      "check": "/etc/gshadow- must be readable only by root and shadow group.",
+      "remediation": "sudo chmod 640 /etc/gshadow- && sudo chown root:shadow /etc/gshadow-"
+    },
+    {
+      "id": "UBU-FILE-009",
+      "section": "SENSITIVE FILE PERMISSIONS",
+      "setting": "/etc/shells",
+      "expected": "644 root:root",
+      "check": "/etc/shells must be world-readable and owned by root.",
+      "remediation": "sudo chmod 644 /etc/shells && sudo chown root:root /etc/shells"
+    },
+    {
+      "id": "UBU-FILE-010",
+      "section": "SENSITIVE FILE PERMISSIONS",
+      "setting": "/etc/security/opasswd",
+      "expected": "600 root:root",
+      "check": "/etc/security/opasswd must be readable only by root.",
+      "remediation": "sudo touch /etc/security/opasswd && sudo chmod 600 /etc/security/opasswd && sudo chown root:root /etc/security/opasswd"
+    }
+  ]
+}

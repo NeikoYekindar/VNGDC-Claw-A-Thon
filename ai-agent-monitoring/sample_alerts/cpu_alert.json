@@ -1,0 +1,16 @@
+{
+  "action": "receive_alert",
+  "alert": {
+    "alert_id": "a-002",
+    "alert_name": "HighCPUUsage",
+    "severity": "warning",
+    "instance": "app-01",
+    "service": "payment-api",
+    "environment": "prod",
+    "timestamp": "2026-01-01T10:02:00Z",
+    "description": "CPU usage exceeded 90% for more than 5 minutes",
+    "labels": { "cpu": "all" },
+    "annotations": { "summary": "High CPU on app-01" },
+    "metrics_url": "http://app-01:9100/metrics"
+  }
+}

@@ -1,0 +1,69 @@
+# Dependencies and package manager caches
+**/node_modules/
+.npm-cache/
+.uv-cache/
+**/.pnpm-store/
+
+# Frontend build output
+**/.next/
+**/out/
+**/dist/
+**/build/
+**/.turbo/
+**/.parcel-cache/
+*.tsbuildinfo
+
+# Python environments and caches
+**/.venv/
+**/venv/
+**/__pycache__/
+**/*.py[cod]
+**/*.egg-info/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+
+# Local secrets and deploy credentials
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!.env.*.example
+!**/.env.example
+!**/.env.*.example
+**/.greennode.json
+**/.env.greennode.json
+**/credentials.json
+**/token.json
+**/*.credentials.json
+
+# AgentBase local state and generated runtime output
+**/.agentbase/
+**/.agentbase-state.json
+**/.agentbase-skills/
+**/.git.backup/
+infra-log-sentinel-agent/data/**
+!infra-log-sentinel-agent/data/.gitkeep
+infra-log-sentinel-agent/reports/**
+!infra-log-sentinel-agent/reports/.gitkeep
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+**/*.log
+
+# Exported artifacts and local reports
+**/exports/
+**/dashboard_data/
+**/*.pdf
+**/*.xlsx
+**/*.zip
+**/*.tar
+**/*.tar.gz
+**/*.gz
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

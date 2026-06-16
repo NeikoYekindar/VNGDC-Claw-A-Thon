@@ -1,0 +1,10 @@
+.git
+.gitignore
+.uv-cache
+dashboard/frontend/.next
+dashboard/frontend/node_modules
+dashboard/frontend/out
+dashboard/frontend/.env*.local
+dashboard/backend/.venv
+dashboard/backend/__pycache__
+dashboard/backend/*.pyc

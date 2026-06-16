@@ -1,0 +1,16 @@
+{
+  "action": "receive_alert",
+  "alert": {
+    "alert_id": "a-001",
+    "alert_name": "HighDiskUsage",
+    "severity": "warning",
+    "instance": "app-01",
+    "service": "payment-api",
+    "environment": "prod",
+    "timestamp": "2026-01-01T10:00:00Z",
+    "description": "Disk usage on / is above 90%",
+    "labels": { "mountpoint": "/" },
+    "annotations": { "summary": "Disk usage is high on app-01" },
+    "metrics_url": null
+  }
+}

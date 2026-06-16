@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 33% 98%;
+    --foreground: 222 35% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 35% 12%;
+    --border: 214 22% 86%;
+    --input: 214 22% 86%;
+    --ring: 26 90% 54%;
+    --primary: 25 88% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 32% 95%;
+    --secondary-foreground: 222 35% 16%;
+    --muted: 210 32% 95%;
+    --muted-foreground: 215 14% 42%;
+    --accent: 173 58% 36%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    letter-spacing: 0;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+    letter-spacing: 0;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(214 18% 76%);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+.chat-scroll-area {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(214 18% 70%) hsl(210 32% 95%);
+}
+
+.chat-scroll-area::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-scroll-area::-webkit-scrollbar-track {
+  background: hsl(210 32% 95%);
+}
+
+.chat-scroll-area::-webkit-scrollbar-thumb {
+  background: hsl(214 18% 70%);
+  border-radius: 999px;
+}

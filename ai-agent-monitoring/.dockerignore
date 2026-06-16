@@ -1,0 +1,16 @@
+.env
+.git
+.agentbase-skills
+__pycache__
+*.pyc
+*.pyo
+venv
+.venv
+tests/
+# Exclude markdown docs at root level only (knowledge/*.md must be included)
+/*.md
+.agentbase-state.json
+.greennode.json
+.env.*
+.agentbase/
+*.credentials.json

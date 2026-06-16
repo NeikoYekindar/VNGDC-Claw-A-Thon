@@ -1,0 +1,7 @@
+hostname,ip,type,monitoring_source
+agent, 54.204.88.9,server,prometheus
+web-01,10.0.0.1,server,prometheus
+web-02,10.0.0.2,server,prometheus
+db-01,10.0.0.10,server,prometheus
+db-02,10.0.0.11,server,prometheus
+app-01,10.0.0.20,server,prometheus

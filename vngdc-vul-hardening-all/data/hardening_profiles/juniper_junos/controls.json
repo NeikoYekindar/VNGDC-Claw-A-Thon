@@ -1,0 +1,265 @@
+{
+  "os_type": "junos",
+  "display_name": "Juniper Junos Switch",
+  "description": "Read-only hardening verification baseline for Juniper Junos network switches. The agent collects Junos set-format configuration over SSH and checks management-plane, authentication, logging, SNMP, NTP, and control-plane protections.",
+  "controls": [
+    {
+      "id": "JUN-MGMT-001",
+      "section": "MANAGEMENT SERVICES",
+      "setting": "SSH service",
+      "expected": "SSH enabled for management access",
+      "check": "Junos SSH service should be enabled.",
+      "match_any": ["^set system services ssh( |$)"],
+      "remediation": "set system services ssh"
+    },
+    {
+      "id": "JUN-MGMT-002",
+      "section": "MANAGEMENT SERVICES",
+      "setting": "Telnet service",
+      "expected": "Telnet disabled",
+      "check": "Telnet must not be enabled because it sends credentials in clear text.",
+      "absent_any": ["^set system services telnet( |$)"],
+      "remediation": "delete system services telnet"
+    },
+    {
+      "id": "JUN-MGMT-003",
+      "section": "MANAGEMENT SERVICES",
+      "setting": "HTTP service",
+      "expected": "Plain HTTP disabled",
+      "check": "Plain HTTP management must not be enabled.",
+      "absent_any": ["^set system services web-management http( |$)"],
+      "remediation": "delete system services web-management http"
+    },
+    {
+      "id": "JUN-MGMT-004",
+      "section": "MANAGEMENT SERVICES",
+      "setting": "HTTPS service",
+      "expected": "HTTPS only when J-Web is required",
+      "check": "If J-Web is used, HTTPS should be configured instead of HTTP.",
+      "severity": "warn",
+      "match_any": ["^set system services web-management https( |$)", "^set system services ssh( |$)"],
+      "remediation": "set system services web-management https system-generated-certificate"
+    },
+    {
+      "id": "JUN-MGMT-005",
+      "section": "MANAGEMENT SERVICES",
+      "setting": "NETCONF over SSH",
+      "expected": "NETCONF over SSH only when automation requires it",
+      "check": "NETCONF should run over SSH if network automation is used.",
+      "severity": "warn",
+      "match_any": ["^set system services netconf ssh( |$)", "^set system services ssh( |$)"],
+      "remediation": "set system services netconf ssh"
+    },
+    {
+      "id": "JUN-AUTH-001",
+      "section": "AUTHENTICATION",
+      "setting": "Root authentication",
+      "expected": "encrypted-password or ssh-rsa/ssh-ed25519 key configured",
+      "check": "Root authentication must use encrypted password or SSH key material, never plain text.",
+      "match_any": [
+        "^set system root-authentication encrypted-password ",
+        "^set system root-authentication ssh-(rsa|ed25519|ecdsa) "
+      ],
+      "absent_any": ["^set system root-authentication plain-text-password"],
+      "remediation": "set system root-authentication encrypted-password <hash> or set system root-authentication ssh-ed25519 <key>"
+    },
+    {
+      "id": "JUN-AUTH-002",
+      "section": "AUTHENTICATION",
+      "setting": "User password storage",
+      "expected": "all local users use encrypted-password or SSH keys",
+      "check": "Local user accounts must not use plain-text-password configuration.",
+      "absent_any": ["^set system login user .* plain-text-password"],
+      "remediation": "delete system login user <user> authentication plain-text-password; set encrypted-password or ssh public key"
+    },
+    {
+      "id": "JUN-AUTH-003",
+      "section": "AUTHENTICATION",
+      "setting": "Remote AAA",
+      "expected": "authentication-order includes radius, tacplus, or password fallback by policy",
+      "check": "Authentication order should be explicitly configured for centralized AAA or documented local fallback.",
+      "severity": "warn",
+      "match_any": ["^set system authentication-order "],
+      "remediation": "set system authentication-order radius; set system radius-server <ip> secret <secret>"
+    },
+    {
+      "id": "JUN-AUTH-004",
+      "section": "AUTHENTICATION",
+      "setting": "Login retry options",
+      "expected": "login retry-options configured",
+      "check": "Login retry policy should limit brute-force attempts.",
+      "match_any": ["^set system login retry-options "],
+      "remediation": "set system login retry-options tries-before-disconnect 3; set system login retry-options backoff-threshold 3"
+    },
+    {
+      "id": "JUN-AUTH-005",
+      "section": "AUTHENTICATION",
+      "setting": "Login classes idle timeout",
+      "expected": "idle-timeout configured for interactive admin classes",
+      "check": "Interactive login classes should have idle-timeout to reduce abandoned session risk.",
+      "severity": "warn",
+      "match_any": ["^set system login class .* idle-timeout "],
+      "remediation": "set system login class <class> idle-timeout 10"
+    },
+    {
+      "id": "JUN-AUTH-006",
+      "section": "AUTHENTICATION",
+      "setting": "Super-user accounts",
+      "expected": "super-user access limited to named admin accounts",
+      "check": "At least one named administrator should be configured; shared root-only administration should be avoided.",
+      "severity": "warn",
+      "match_any": ["^set system login user .* class super-user"],
+      "remediation": "set system login user <admin> class super-user authentication ssh-ed25519 <key>"
+    },
+    {
+      "id": "JUN-LOG-001",
+      "section": "LOGGING AND AUDIT",
+      "setting": "Remote syslog",
+      "expected": "remote syslog host configured",
+      "check": "Switch should forward logs to a centralized syslog/SIEM collector.",
+      "match_any": ["^set system syslog host "],
+      "remediation": "set system syslog host <syslog-ip> any info; set system syslog host <syslog-ip> authorization info"
+    },
+    {
+      "id": "JUN-LOG-002",
+      "section": "LOGGING AND AUDIT",
+      "setting": "Interactive command logging",
+      "expected": "interactive-commands logged",
+      "check": "Junos should log interactive admin commands.",
+      "match_any": ["^set system syslog .* interactive-commands "],
+      "remediation": "set system syslog file interactive-commands interactive-commands any"
+    },
+    {
+      "id": "JUN-LOG-003",
+      "section": "LOGGING AND AUDIT",
+      "setting": "Authorization/authentication logging",
+      "expected": "authorization info or any info logging configured",
+      "check": "Authorization and authentication events should be logged.",
+      "match_any": [
+        "^set system syslog .* authorization info",
+        "^set system syslog .* any info"
+      ],
+      "remediation": "set system syslog file messages authorization info"
+    },
+    {
+      "id": "JUN-NTP-001",
+      "section": "TIME SYNCHRONIZATION",
+      "setting": "NTP servers",
+      "expected": "at least one NTP server configured",
+      "check": "NTP should be configured for accurate log correlation.",
+      "match_any": ["^set system ntp server "],
+      "remediation": "set system ntp server <ntp-ip-or-fqdn>"
+    },
+    {
+      "id": "JUN-NTP-002",
+      "section": "TIME SYNCHRONIZATION",
+      "setting": "Timezone",
+      "expected": "time-zone Asia/Ho_Chi_Minh or approved timezone",
+      "check": "Timezone should be explicitly configured.",
+      "severity": "warn",
+      "match_any": ["^set system time-zone "],
+      "remediation": "set system time-zone Asia/Ho_Chi_Minh"
+    },
+    {
+      "id": "JUN-SNMP-001",
+      "section": "SNMP",
+      "setting": "Default public community",
+      "expected": "public/private community absent",
+      "check": "Default SNMP communities must not exist.",
+      "absent_any": [
+        "^set snmp community public( |$)",
+        "^set snmp community private( |$)"
+      ],
+      "remediation": "delete snmp community public; delete snmp community private"
+    },
+    {
+      "id": "JUN-SNMP-002",
+      "section": "SNMP",
+      "setting": "SNMP client restriction",
+      "expected": "SNMP communities restricted to client-list or clients",
+      "check": "If SNMP community is used, access should be restricted to monitoring collectors.",
+      "severity": "warn",
+      "match_any": [
+        "^set snmp community .* client-list-name ",
+        "^set snmp community .* clients "
+      ],
+      "remediation": "set snmp community <community> client-list-name <list> or migrate to SNMPv3"
+    },
+    {
+      "id": "JUN-SNMP-003",
+      "section": "SNMP",
+      "setting": "SNMPv3",
+      "expected": "SNMPv3 configured when SNMP is required",
+      "check": "SNMPv3 should be preferred over community-based SNMP.",
+      "severity": "warn",
+      "match_any": ["^set snmp v3 "],
+      "remediation": "set snmp v3 usm local-engine user <user> authentication-sha ..."
+    },
+    {
+      "id": "JUN-PLANE-001",
+      "section": "CONTROL PLANE PROTECTION",
+      "setting": "Loopback firewall filter",
+      "expected": "firewall filter applied to lo0",
+      "check": "A firewall filter should protect the routing engine/control plane.",
+      "match_any": ["^set interfaces lo0 unit 0 family inet filter input "],
+      "remediation": "set interfaces lo0 unit 0 family inet filter input <protect-re-filter>"
+    },
+    {
+      "id": "JUN-PLANE-002",
+      "section": "CONTROL PLANE PROTECTION",
+      "setting": "SSH source restriction",
+      "expected": "control-plane filter restricts SSH management sources",
+      "check": "Control-plane filter should explicitly match SSH management sources.",
+      "severity": "warn",
+      "match_any": [
+        "^set firewall family inet filter .* term .* from source-address ",
+        "^set firewall family inet filter .* term .* from source-prefix-list "
+      ],
+      "remediation": "Add source-address/source-prefix-list terms to the lo0 input filter for SSH/management protocols."
+    },
+    {
+      "id": "JUN-CFG-001",
+      "section": "CONFIGURATION MANAGEMENT",
+      "setting": "Configuration archival",
+      "expected": "transfer-on-commit archive-site configured",
+      "check": "Configuration changes should be archived automatically after commit.",
+      "severity": "warn",
+      "match_all": [
+        "^set system archival configuration transfer-on-commit",
+        "^set system archival configuration archive-sites "
+      ],
+      "remediation": "set system archival configuration transfer-on-commit; set system archival configuration archive-sites scp://user@server/path password <secret>"
+    },
+    {
+      "id": "JUN-CFG-002",
+      "section": "CONFIGURATION MANAGEMENT",
+      "setting": "Login banner",
+      "expected": "legal/authorized-use banner configured",
+      "check": "Login announcement should warn that the device is for authorized use only.",
+      "severity": "warn",
+      "match_any": ["^set system login announcement "],
+      "remediation": "set system login announcement \"Authorized access only. Activity may be monitored.\""
+    },
+    {
+      "id": "JUN-OP-001",
+      "section": "OPERATIONS",
+      "setting": "Junos version visibility",
+      "expected": "show version returns Junos information",
+      "source": "version",
+      "check": "Agent must be able to read Junos version for inventory and audit evidence.",
+      "match_any": ["JUNOS", "Junos", "junos"],
+      "remediation": "Ensure SSH user has permission to run show version."
+    },
+    {
+      "id": "JUN-OP-002",
+      "section": "OPERATIONS",
+      "setting": "Commit history visibility",
+      "expected": "show system commit returns commit history",
+      "source": "commit",
+      "severity": "warn",
+      "check": "Agent should be able to read commit history for change audit evidence.",
+      "match_any": ["commit", "by ", "ago"],
+      "remediation": "Ensure SSH user has permission to run show system commit."
+    }
+  ]
+}

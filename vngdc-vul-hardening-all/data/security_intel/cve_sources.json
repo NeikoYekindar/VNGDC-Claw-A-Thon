@@ -1,0 +1,101 @@
+{
+  "description": "Preferred CVE intelligence sources for vulnerability analysis and report links.",
+  "priority_order": [
+    "vendor_advisory",
+    "cisa_kev",
+    "nvd",
+    "cve_org",
+    "osv",
+    "github_advisory"
+  ],
+  "sources": [
+    {
+      "id": "cve_org",
+      "name": "CVE.org Record",
+      "scope": "canonical",
+      "url_template": "https://www.cve.org/CVERecord?id={cve}",
+      "notes": "Canonical CVE record maintained by the CVE program."
+    },
+    {
+      "id": "nvd",
+      "name": "NVD Detail",
+      "scope": "enrichment",
+      "url_template": "https://nvd.nist.gov/vuln/detail/{cve}",
+      "notes": "NIST NVD enrichment, CVSS, CWE, CPE and references."
+    },
+    {
+      "id": "nvd_api",
+      "name": "NVD API",
+      "scope": "api",
+      "url_template": "https://services.nvd.nist.gov/rest/json/cves/2.0?cveIds={cve}",
+      "notes": "Machine-readable NVD CVE API endpoint."
+    },
+    {
+      "id": "cisa_kev",
+      "name": "CISA KEV Catalog",
+      "scope": "exploitation",
+      "url_template": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+      "notes": "Known Exploited Vulnerabilities catalog; prioritize if CVE is listed."
+    },
+    {
+      "id": "cisa_kev_json",
+      "name": "CISA KEV JSON",
+      "scope": "api",
+      "url_template": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
+      "notes": "Machine-readable CISA Known Exploited Vulnerabilities catalog."
+    },
+    {
+      "id": "epss_api",
+      "name": "FIRST EPSS API",
+      "scope": "api",
+      "url_template": "https://api.first.org/data/v1/epss?cve={cve}",
+      "notes": "Exploit Prediction Scoring System probability and percentile."
+    },
+    {
+      "id": "osv",
+      "name": "OSV",
+      "scope": "open_source",
+      "url_template": "https://osv.dev/vulnerability/{cve}",
+      "notes": "Open Source Vulnerabilities database with ecosystem and package context."
+    },
+    {
+      "id": "github_advisory",
+      "name": "GitHub Advisory Database",
+      "scope": "open_source",
+      "url_template": "https://github.com/advisories?query={cve}",
+      "notes": "GitHub advisory search by CVE ID."
+    },
+    {
+      "id": "ubuntu_security",
+      "name": "Ubuntu Security",
+      "scope": "vendor_advisory",
+      "os_match": ["ubuntu"],
+      "url_template": "https://ubuntu.com/security/{cve}",
+      "notes": "Ubuntu package status and fixed versions."
+    },
+    {
+      "id": "debian_tracker",
+      "name": "Debian Security Tracker",
+      "scope": "vendor_advisory",
+      "os_match": ["debian", "ubuntu"],
+      "url_template": "https://security-tracker.debian.org/tracker/{cve}",
+      "notes": "Debian package status and security tracker."
+    },
+    {
+      "id": "redhat_cve",
+      "name": "Red Hat CVE Database",
+      "scope": "vendor_advisory",
+      "os_match": ["rhel", "red hat", "centos", "fedora", "rocky", "alma"],
+      "url_template": "https://access.redhat.com/security/cve/{cve}",
+      "notes": "Red Hat severity, package impact and errata context."
+    },
+    {
+      "id": "msrc",
+      "name": "Microsoft Security Response Center",
+      "scope": "vendor_advisory",
+      "os_match": ["windows", "microsoft"],
+      "url_template": "https://msrc.microsoft.com/update-guide/vulnerability/{cve}",
+      "notes": "Microsoft advisory and remediation guidance."
+    }
+  ]
+}

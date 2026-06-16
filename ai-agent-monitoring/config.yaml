@@ -1,0 +1,109 @@
+agent:
+  batch_window_minutes: 5
+  command_timeout_seconds: 20
+  max_alerts_per_batch: 50
+  default_confidence_threshold: medium
+
+system_context:
+  infrastructure_type: cloud   # on_premise | cloud | hybrid
+  critical_environments:
+    - prod
+    - production
+    - unknown   # treat unknown env as potentially critical
+  critical_services:
+    - payment-api
+    - auth-service
+    - database
+    - gateway
+    - node
+    - node-exporter
+    - web
+    - api
+    - backend
+    - ""   # empty service = unknown, treat as potentially critical
+  low_relevance_keywords:
+    - cloud load balancer
+    - aws autoscaling
+    - gcp cloud run
+    - azure app service
+
+telegram:
+  bot_token_env: TELEGRAM_BOT_TOKEN
+  chat_id_env: TELEGRAM_CHAT_ID
+
+ssh:
+  username_env: SSH_USERNAME
+  private_key_path_env: SSH_PRIVATE_KEY_PATH
+  bastion_host_env: BASTION_HOST
+  allowed_commands:
+    # System info
+    - uptime
+    - uname
+    - cat /etc/os-release
+    - cat /etc/redhat-release
+    - cat /etc/issue
+    - cat /proc/version
+    - cat /proc/cpuinfo
+    - cat /proc/meminfo
+    - hostname
+    # Resources
+    - free -m
+    - free -h
+    - df -h
+    - du -sh
+    - df -ih
+    - top -b -n 1
+    - vmstat
+    - mpstat
+    - iostat
+    # Processes
+    - ps aux
+    - ps -ef
+    # Network & ports
+    - ss
+    - ip addr
+    - ip route
+    - ip -s link
+    - netstat
+    - ping
+    # Services & logs
+    - systemctl status
+    - systemctl list-units
+    - journalctl
+    - tail
+    - grep
+    - ls -la /var/log
+    - ls -lh /var/log
+    - ls /var/log
+    - find /var/log
+    - cat /var/log/syslog
+    - cat /var/log/messages
+    - cat /var/log/auth.log
+    - cat /var/log/nginx
+    - cat /var/log/apache2
+    # Disk
+    - lsblk
+    - dmesg
+    # Kubernetes
+    - kubectl get pods
+    - kubectl describe pod
+    - kubectl logs
+    - kubectl top pod
+
+metrics:
+  prometheus_url_env: PROMETHEUS_URL
+  allow_direct_instance_metrics: true
+
+monitoring:
+  # URL công khai của Alertmanager
+  alertmanager_url: "http://54.82.62.233:9093"
+  # Bật để query CheckMK cho thiết bị mạng (tắt trong demo)
+  network_monitoring_enabled: false
+  # Bật để LLM phân tích tương quan giữa các sự kiện
+  correlation_enabled: true
+
+# CheckMK chỉ dùng khi network_monitoring_enabled=true
+checkmk:
+  url_env: CHECKMK_URL
+  username_env: CHECKMK_USERNAME
+  secret_env: CHECKMK_AUTOMATION_SECRET  # automation user secret

@@ -1,0 +1,103 @@
+{
+  "os_type": "windows",
+  "display_name": "Windows Server 2022",
+  "description": "Configured hardening baseline for Windows Server 2022.",
+  "controls": [
+    {
+      "id": "WIN-DEF-001",
+      "section": "WINDOWS DEFENDER",
+      "setting": "AntivirusEnabled",
+      "expected": "True",
+      "check": "Microsoft Defender Antivirus must be enabled",
+      "remediation": "Set-MpPreference -DisableRealtimeMonitoring $false"
+    },
+    {
+      "id": "WIN-DEF-002",
+      "section": "WINDOWS DEFENDER",
+      "setting": "RealTimeProtectionEnabled",
+      "expected": "True",
+      "check": "Real-time protection must be enabled",
+      "remediation": "Set-MpPreference -DisableRealtimeMonitoring $false"
+    },
+    {
+      "id": "WIN-FW-001",
+      "section": "WINDOWS FIREWALL",
+      "setting": "Domain,Private,Public profiles",
+      "expected": "Enabled",
+      "check": "All Windows Firewall profiles must be enabled",
+      "remediation": "Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True"
+    },
+    {
+      "id": "WIN-PATCH-001",
+      "section": "WINDOWS UPDATES",
+      "setting": "Pending updates",
+      "expected": "0",
+      "check": "No pending software updates should remain",
+      "remediation": "Install pending Windows updates through your approved patching workflow"
+    },
+    {
+      "id": "WIN-PASS-001",
+      "section": "PASSWORD POLICY",
+      "setting": "Maximum password age",
+      "expected": "90 days",
+      "check": "Local password age should be limited",
+      "remediation": "net accounts /maxpwage:90 /minpwage:1 /minpwlen:14 /uniquepw:24"
+    },
+    {
+      "id": "WIN-AUDIT-001",
+      "section": "AUDIT POLICY",
+      "setting": "Logon and policy auditing",
+      "expected": "Success and Failure",
+      "check": "Audit policy should capture logon, account management, policy change, privilege use, and system events",
+      "remediation": "auditpol /set /category:* /success:enable /failure:enable"
+    },
+    {
+      "id": "WIN-ACCT-001",
+      "section": "LOCAL ADMIN ACCOUNTS",
+      "setting": "Guest account",
+      "expected": "Disabled",
+      "check": "Guest account must be disabled",
+      "remediation": "Disable-LocalUser -Name Guest"
+    },
+    {
+      "id": "WIN-RDP-001",
+      "section": "REMOTE DESKTOP (RDP)",
+      "setting": "Network Level Authentication",
+      "expected": "Enabled",
+      "check": "If RDP is enabled, NLA must be enforced",
+      "remediation": "Set-ItemProperty 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp' -Name UserAuthentication -Value 1"
+    },
+    {
+      "id": "WIN-SMB-001",
+      "section": "SMB PROTOCOL",
+      "setting": "SMBv1",
+      "expected": "Disabled",
+      "check": "SMBv1 must be disabled",
+      "remediation": "Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -NoRestart"
+    },
+    {
+      "id": "WIN-UAC-001",
+      "section": "USER ACCOUNT CONTROL (UAC)",
+      "setting": "EnableLUA",
+      "expected": "1",
+      "check": "UAC must be enabled",
+      "remediation": "Set-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name EnableLUA -Value 1"
+    },
+    {
+      "id": "WIN-PS-001",
+      "section": "POWERSHELL EXECUTION POLICY",
+      "setting": "ExecutionPolicy",
+      "expected": "RemoteSigned or stricter",
+      "check": "PowerShell execution policy should not be Unrestricted",
+      "remediation": "Set-ExecutionPolicy RemoteSigned -Scope LocalMachine -Force"
+    },
+    {
+      "id": "WIN-LOG-001",
+      "section": "EVENT LOG STATUS",
+      "setting": "Security/System/Application logs",
+      "expected": "Active",
+      "check": "Core Windows Event Logs must be active",
+      "remediation": "wevtutil sl Security /ms:134217728"
+    }
+  ]
+}
