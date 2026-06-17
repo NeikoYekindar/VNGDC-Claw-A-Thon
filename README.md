@@ -51,30 +51,22 @@ answer.
                     | Conversation memory                |
                     | LLM synthesis                      |
                     | AgentBase health and invocations   |
-                    +-----+---------------+--------------+
-                          |               |
-          +---------------+               +----------------+
-          |                                                |
-          v                                                v
-+---------+----------+                         +-----------+----------+
-| Monitoring Agent   |                         | Logging Agent        |
-| ai-agent-monitoring|                         | infra-log-sentinel   |
-+---------+----------+                         +-----------+----------+
-          |                                                |
-          |                                                |
-          v                                                v
- Prometheus alerts, RCA,                         Log parsing, severity,
- SSH checks, inventory,                          RCA workspace, incident
- knowledge base                                  generation, reports
+                    +-----+----------------------+-------+
+                          |               |      |
+          +---------------+               |      +-----------------------------+
+          |                               |                                    |
+          v                               v                                    v
++---------+----------+         +----------------------+            +-----------+----------+
+| Monitoring Agent   |         | Security Agent       |            | Logging Agent        |
+| ai-agent-monitoring|         | vngdc-vul-hardening  |            | infra-log-sentinel   |
++---------+----------+         +----------+-----------+            +-----------+----------+
+          |                               |                                    |
+          |                               |                                    |
+          v                               v                                    v
+ Prometheus alerts, RCA,        Hardening, Wazuh, CVE,               Log parsing, severity,
+ SSH checks, inventory,         patch priority, reports              RCA workspace, incident
+ knowledge base                                                      generation, reports
 
-                          +----------------------+
-                          | Security Agent       |
-                          | vngdc-vul-hardening  |
-                          +----------+-----------+
-                                     |
-                                     v
-                         Hardening, Wazuh, CVE,
-                         patch priority, reports
 ```
 
 ### Master-Agent Routing Model
