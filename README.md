@@ -1,6 +1,6 @@
-# VNGDC-Claw-A-Thon
+# VNGDC-247-OPERATION-AGENT
 
-VNGDC-Claw-A-Thon is a unified multi-agent operations platform for modern data
+VNGDC-247-OPERATION-AGENT is a unified multi-agent operations platform for modern data
 center teams. It brings monitoring intelligence, infrastructure log RCA, and
 security hardening into one master dashboard where operators can ask questions,
 review system posture, investigate incidents, and coordinate actions across
