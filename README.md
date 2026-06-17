@@ -129,6 +129,8 @@ master-agent/
 
 Path: `ai-agent-monitoring/`
 
+Link github: [Monitoring Agent](https://github.com/quantc31/ai-agent-monitoring)
+
 The monitoring agent focuses on metrics, alerts, server investigation, and
 runbook-driven RCA. It can receive alerts from Prometheus Alertmanager, group
 related alerts into batches, run safe investigation commands, and generate
@@ -156,6 +158,8 @@ How it is used by the master dashboard:
 ### 3. Infrastructure Log Sentinel Agent
 
 Path: `infra-log-sentinel-agent/`
+
+Link github: [Infrastructure Log Sentinel Agent](https://github.com/trangdm/infra-log-sentinel-agent)
 
 The logging agent is an AIOps log intelligence system. It reads infrastructure
 logs, detects domains, parses events, classifies severity, and runs root cause
@@ -192,6 +196,8 @@ How it is used by the master dashboard:
 ### 4. Security Hardening Agent
 
 Path: `vngdc-vul-hardening-all/`
+
+Link github: [ Security Hardening Agent](https://github.com/NeikoYekindar/Claw-A-Thon)
 
 The security agent focuses on hardening, Wazuh visibility, vulnerability
 prioritization, and remediation planning for internal infrastructure. It is
